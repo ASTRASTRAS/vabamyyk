@@ -2,80 +2,138 @@
 <html lang="et">
 <head>
 <meta charset="utf-8">
-<title>Eesti Sekkarite Kaart</title>
+<title>Eesti Müügikaart</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
 
 <style>
 html, body {
   margin: 0;
   height: 100%;
+  font-family: Arial;
 }
 
 #map {
+  height: 100%;
   width: 100%;
-  height: 100vh;
+}
+
+/* UI */
+#panel {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 9999;
+  background: white;
+  padding: 10px;
+  border-radius: 10px;
+  width: 220px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+#panel input, #panel select, #panel button {
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 6px;
 }
 </style>
 </head>
 
 <body>
 
+<div id="panel">
+  <input id="search" placeholder="Otsi linna (nt Tallinn)">
+  
+  <select id="filter">
+    <option value="all">Kõik</option>
+    <option value="õuemüük">Õuemüük</option>
+    <option value="garaažimüük">Garaažimüük</option>
+    <option value="hoovimüük">Hoovimüük</option>
+    <option value="second-hand">Second-hand</option>
+    <option value="riided">Riided</option>
+    <option value="raamatud">Raamatud</option>
+    <option value="tehnika">Tehnika</option>
+    <option value="tasuta">Tasuta</option>
+  </select>
+
+  <button onclick="applyFilters()">Rakenda</button>
+</div>
+
 <div id="map"></div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
 
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+
 <script>
 
-// ⭐ 1. KAART
 const map = L.map('map').setView([58.7, 25.0], 7);
 
-// ⭐ 2. OPENSTREETMAP
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '© OpenStreetMap contributors'
+  attribution: '© OpenStreetMap'
 }).addTo(map);
 
-// ⭐ 3. GOOGLE SHEETS CSV (SINU LINK)
+// cluster group
+const markers = L.markerClusterGroup();
+map.addLayer(markers);
+
 const csvURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRJnBTGUcESoMf7GV4h9oZs9FgVvw_mS1o4xp79WaP7zGKD1lHwuQp3iPVYnTWrMRMKCxUrN7uA0VAX/pub?output=csv";
 
-// ⭐ 4. LAE ANDMED (ÕIGE CSV PARSING)
+let allData = [];
+
 Papa.parse(csvURL, {
   download: true,
   header: true,
-  skipEmptyLines: true,
-
   complete: function(results) {
-
-    console.log("CSV andmed:", results.data);
-
-    results.data.forEach(row => {
-
-      const lat = parseFloat(row.Latitude);
-      const lng = parseFloat(row.Longitude);
-
-      if (isNaN(lat) || isNaN(lng)) return;
-
-      const name = row.Nimi || "Nimetu";
-      const addr = row.Aadress || "";
-      const time = row.Kellaaeg || "";
-
-      L.marker([lat, lng]).addTo(map)
-        .bindPopup(
-          `<b>${name}</b><br>
-           ${addr}<br>
-           🕒 ${time}`
-        );
-
-    });
-
-  },
-
-  error: function(err) {
-    console.error("CSV laadimine ebaõnnestus:", err);
+    allData = results.data;
+    renderMarkers(allData);
   }
-
 });
+
+function renderMarkers(data) {
+  markers.clearLayers();
+
+  data.forEach(row => {
+
+    const lat = parseFloat(row.Latitude);
+    const lng = parseFloat(row.Longitude);
+
+    if (isNaN(lat) || isNaN(lng)) return;
+
+    const type = (row.Tüüp || "").toLowerCase();
+
+    const m = L.marker([lat, lng]).bindPopup(
+      `<b>${row.Nimi}</b><br>${row.Aadress}<br>${row.Kellaaeg || ""}`
+    );
+
+    m.category = type;
+    m.city = (row.Aadress || "").toLowerCase();
+
+    markers.addLayer(m);
+  });
+}
+
+// FILTER + SEARCH
+function applyFilters() {
+
+  const search = document.getElementById("search").value.toLowerCase();
+  const filter = document.getElementById("filter").value;
+
+  const filtered = allData.filter(row => {
+
+    const cityMatch = (row.Aadress || "").toLowerCase().includes(search);
+
+    const type = (row.Tüüp || "").toLowerCase();
+    const typeMatch = filter === "all" || type === filter;
+
+    return cityMatch && typeMatch;
+  });
+
+  renderMarkers(filtered);
+}
 
 </script>
 
