@@ -23,20 +23,16 @@ html, body {
     height: 100vh;
 }
 
-/* UI */
 #panel {
     position: absolute;
     top: 10px;
     left: 10px;
     z-index: 9999;
-
     background: white;
     padding: 12px;
     border-radius: 12px;
-
     width: 320px;
     max-width: calc(100vw - 20px);
-
     box-shadow: 0 2px 10px rgba(0,0,0,0.25);
 }
 
@@ -50,7 +46,6 @@ html, body {
     margin-bottom: 8px;
 }
 
-/* mobiil */
 @media (max-width: 700px) {
     #panel {
         width: calc(100vw - 20px);
@@ -73,21 +68,21 @@ html, body {
 
 <div id="panel">
 
-    <input id="search" placeholder="Otsi linna või kohta">
+<input id="search" placeholder="Otsi linna või kohta">
 
-    <select id="filter">
-        <option value="all">Kõik</option>
-        <option value="hooaja toit">Hooaja toit</option>
-        <option value="garaažimüük">Garaažimüük</option>
-        <option value="hoovimüük">Hoovimüük</option>
-        <option value="second-hand">Second-hand</option>
-        <option value="riided">Riided</option>
-        <option value="raamatud">Raamatud</option>
-        <option value="tehnika">Tehnika</option>
-        <option value="tasuta">Tasuta</option>
-    </select>
+<select id="filter">
+<option value="all">Kõik</option>
+<option value="hooaja toit">Hooaja toit</option>
+<option value="garaažimüük">Garaažimüük</option>
+<option value="hoovimüük">Hoovimüük</option>
+<option value="second-hand">Second-hand</option>
+<option value="riided">Riided</option>
+<option value="raamatud">Raamatud</option>
+<option value="tehnika">Tehnika</option>
+<option value="tasuta">Tasuta</option>
+</select>
 
-    <button onclick="applyFilters()">Rakenda</button>
+<button onclick="applyFilters()">Rakenda</button>
 
 </div>
 
@@ -97,95 +92,159 @@ html, body {
 <script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 
+
 <script>
 
-// ⭐ KAART
-const map = L.map('map').setView([58.7, 25.0], 7);
+const map = L.map('map').setView([58.7,25.0],7);
 
-L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap'
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    attribution:'© OpenStreetMap'
 }).addTo(map);
 
-// ⭐ CLUSTER
+
 const markers = L.markerClusterGroup();
 map.addLayer(markers);
+
 
 const csvURL =
 "https://docs.google.com/spreadsheets/d/e/2PACX-1vRJnBTGUcESoMf7GV4h9oZs9FgVvw_mS1o4xp79WaP7zGKD1lHwuQp3iPVYnTWrMRMKCxUrN7uA0VAX/pub?output=csv";
 
-let allData = [];
 
-// ⭐ LOAD DATA
-Papa.parse(csvURL, {
-    download: true,
-    header: true,
-    skipEmptyLines: true,
+let allData=[];
 
-    complete: function(results) {
+
+Papa.parse(csvURL,{
+    download:true,
+    header:true,
+    skipEmptyLines:true,
+
+    complete:function(results){
+
         allData = results.data;
+
+        console.log(allData);
+
         renderMarkers(allData);
     }
 });
 
-// ⭐ RENDER MARKERS
-function renderMarkers(data) {
+
+
+function renderMarkers(data){
 
     markers.clearLayers();
 
-    data.forEach(row => {
 
-        const lat = parseFloat(row.Latitude);
-        const lng = parseFloat(row.Longitude);
+    data.forEach(row=>{
 
-        if (isNaN(lat) || isNaN(lng)) return;
 
-        const type = (row.Tüüp || "").toLowerCase();
+        const lat=parseFloat(row.Latitude);
+        const lng=parseFloat(row.Longitude);
 
-        const marker = L.marker([lat, lng]);
 
-        const veeb = row.Veeb
-    ? (row.Veeb.startsWith("http") ? row.Veeb : "https://" + row.Veeb)
-    : "#";
+        if(isNaN(lat)||isNaN(lng)) return;
 
-marker.bindPopup(
-    `<b>${row.Nimi || ""}</b><br>
-     ${row.Aadress || ""}<br>
-     🏙 ${row.Linn || ""}<br>
-     🕒 ${row.Kellaaeg || ""}<br>
-     🏷 ${row.Tüüp || ""}<br>
-     🔗 <a href="${veeb}" target="_blank" rel="noopener noreferrer">Veeb</a>`
-);
 
-        marker.type = type;
-        marker.city = (row.Linn || "").toLowerCase();
+
+        const marker=L.marker([lat,lng]);
+
+
+        let veebText = "";
+
+        if(row.Veeb){
+            veebText = String(row.Veeb).trim();
+        }
+
+
+        let veebLink="";
+
+
+        if(veebText){
+
+            if(!veebText.startsWith("http")){
+                veebLink="https://"+veebText;
+            }
+            else{
+                veebLink=veebText;
+            }
+
+        }
+
+
+
+        let veebHTML = veebLink
+        ? `<a href="${veebLink}" target="_blank" rel="noopener noreferrer">Veeb</a>`
+        : `Veeb puudub`;
+
+
+
+        marker.bindPopup(`
+
+        <b>${row.Nimi || ""}</b><br>
+        ${row.Aadress || ""}<br>
+        🏙 ${row.Linn || ""}<br>
+        🕒 ${row.Kellaaeg || ""}<br>
+        🏷 ${row.Tüüp || ""}<br>
+        🔗 ${veebHTML}
+
+        `);
+
+
 
         markers.addLayer(marker);
-    });
-}
 
-// ⭐ FILTER + SEARCH
-function applyFilters() {
 
-    const search = document.getElementById("search").value.toLowerCase();
-    const filter = document.getElementById("filter").value;
-
-    const filtered = allData.filter(row => {
-
-        const cityMatch =
-            (row.Linn || "").toLowerCase().includes(search) ||
-            (row.Aadress || "").toLowerCase().includes(search) ||
-            (row.Nimi || "").toLowerCase().includes(search);
-
-        const type = (row.Tüüp || "").toLowerCase();
-
-        const typeMatch =
-            filter === "all" || type === filter;
-
-        return cityMatch && typeMatch;
     });
 
-    renderMarkers(filtered);
 }
+
+
+
+
+function applyFilters(){
+
+
+const search=document.getElementById("search").value.toLowerCase();
+
+const filter=document.getElementById("filter").value;
+
+
+
+const filtered=allData.filter(row=>{
+
+
+const cityMatch=
+
+(row.Linn||"").toLowerCase().includes(search)
+
+||
+
+(row.Aadress||"").toLowerCase().includes(search)
+
+||
+
+(row.Nimi||"").toLowerCase().includes(search);
+
+
+
+const type=(row.Tüüp||"").toLowerCase();
+
+
+const typeMatch =
+filter==="all" || type===filter;
+
+
+return cityMatch && typeMatch;
+
+
+});
+
+
+renderMarkers(filtered);
+
+
+}
+
 
 </script>
 
