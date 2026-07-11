@@ -143,14 +143,18 @@ function renderMarkers(data) {
 
         const marker = L.marker([lat, lng]);
 
-        marker.bindPopup(
-            `<b>${row.Nimi || ""}</b><br>
-             ${row.Aadress || ""}<br>
-             🏙 ${row.Linn || ""}<br>
-             🕒 ${row.Kellaaeg || ""}<br>
-             🏷 ${row.Tüüp || ""}<br>
-             🔗 <a href="${row.Veeb || "#"}" target="_blank">Veeb</a>`
-        );
+        const veeb = row.Veeb
+    ? (row.Veeb.startsWith("http") ? row.Veeb : "https://" + row.Veeb)
+    : "#";
+
+marker.bindPopup(
+    `<b>${row.Nimi || ""}</b><br>
+     ${row.Aadress || ""}<br>
+     🏙 ${row.Linn || ""}<br>
+     🕒 ${row.Kellaaeg || ""}<br>
+     🏷 ${row.Tüüp || ""}<br>
+     🔗 <a href="${veeb}" target="_blank" rel="noopener noreferrer">Veeb</a>`
+);
 
         marker.type = type;
         marker.city = (row.Linn || "").toLowerCase();
