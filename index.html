@@ -128,16 +128,14 @@
 
   <div id="banners">
     <div class="banner">
-      <div class="banner-track">
-        <span>Soovite reklaamida ettevõtet? Võtke ühendust. Hinnad soodsad.</span>
-        <span aria-hidden="true">Soovite reklaamida ettevõtet? Võtke ühendust. Hinnad soodsad.</span>
+      <div class="banner-track"
+           data-text="Soovite reklaamida ettevõtet? Võtke ühendust. Hinnad soodsad.">
       </div>
     </div>
 
     <div class="banner second">
-      <div class="banner-track">
-        <span>Ostke riided: temuke.com!</span>
-        <span aria-hidden="true">Ostke riided: temuke.com!</span>
+      <div class="banner-track"
+           data-text="Ostke riided: temuke.com!">
       </div>
     </div>
   </div>
@@ -163,6 +161,23 @@
       "https://docs.google.com/spreadsheets/d/e/2PACX-1vRJnBTGUcESoMf7GV4h9oZs9FgVvw_mS1o4xp79WaP7zGKD1lHwuQp3iPVYnTWrMRMKCxUrN7uA0VAX/pub?output=csv";
 
     let allData = [];
+
+    function fillBanners() {
+      document.querySelectorAll(".banner-track").forEach(track => {
+        const text = track.dataset.text;
+        track.innerHTML = "";
+
+        while (track.scrollWidth < window.innerWidth * 2) {
+          const item = document.createElement("span");
+          item.textContent = text;
+          track.appendChild(item);
+        }
+
+        track.innerHTML += track.innerHTML;
+      });
+    }
+
+    fillBanners();
 
     function getValue(row, names) {
       for (const name of names) {
