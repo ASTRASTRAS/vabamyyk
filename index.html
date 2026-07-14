@@ -2,7 +2,7 @@
 <html lang="et">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Eesti müügikaart</title>
 
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
@@ -54,7 +54,7 @@
       position: fixed;
       left: 0;
       right: 0;
-      bottom: 0;
+      bottom: env(safe-area-inset-bottom, 0px);
       z-index: 10000;
     }
 
@@ -86,6 +86,10 @@
       animation-duration: 18s;
     }
 
+    .banner.third .banner-track {
+      animation-duration: 25s;
+    }
+
     @keyframes move-banner {
       from { transform: translateX(0); }
       to { transform: translateX(-50%); }
@@ -94,6 +98,10 @@
     @media (max-width: 700px) {
       #panel {
         width: calc(100vw - 20px);
+      }
+
+      #banners {
+        bottom: max(10px, env(safe-area-inset-bottom, 0px));
       }
 
       .banner {
@@ -136,6 +144,12 @@
     <div class="banner second">
       <div class="banner-track"
            data-text="Ostke riided: temuke.com!">
+      </div>
+    </div>
+
+    <div class="banner third">
+      <div class="banner-track"
+           data-text="Soovite näha siin oma ettevõtte reklaami? Võtke ühendust meie Facebooki leheküljel.">
       </div>
     </div>
   </div>
@@ -281,7 +295,7 @@
         map.setView(points[0], 14);
       } else if (points.length > 1) {
         map.fitBounds(points, {
-          padding: [40, 100],
+          padding: [40, 140],
           maxZoom: 14
         });
       }
