@@ -1,252 +1,243 @@
 <!DOCTYPE html>
 <html lang="et">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>Eesti müügikaart</title>
+  <title>Eesti müügikaart</title>
 
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
 
-<style>
-html, body {
-    margin: 0;
-    padding: 0;
-    height: 100%;
-    font-family: Arial, sans-serif;
-}
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: Arial, sans-serif;
+    }
 
-#map {
-    width: 100%;
-    height: 100vh;
-}
+    #map {
+      width: 100%;
+      height: 100vh;
+    }
 
-#panel {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    z-index: 9999;
-    background: white;
-    padding: 12px;
-    border-radius: 12px;
-    width: 320px;
-    max-width: calc(100vw - 20px);
-    box-shadow: 0 2px 10px rgba(0,0,0,0.25);
-}
-
-#panel input,
-#panel select,
-#panel button {
-    width: 100%;
-    box-sizing: border-box;
-    font-size: 16px;
-    padding: 10px;
-    margin-bottom: 8px;
-}
-
-@media (max-width: 700px) {
     #panel {
-        width: calc(100vw - 20px);
-        left: 10px;
-        top: 10px;
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 9999;
+      background: white;
+      padding: 12px;
+      border-radius: 12px;
+      width: 320px;
+      max-width: calc(100vw - 20px);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
     }
 
     #panel input,
     #panel select,
     #panel button {
+      width: 100%;
+      box-sizing: border-box;
+      font-size: 16px;
+      padding: 10px;
+      margin-bottom: 8px;
+    }
+
+    #status {
+      font-size: 14px;
+      color: #555;
+      margin: 2px 0 0;
+    }
+
+    @media (max-width: 700px) {
+      #panel {
+        width: calc(100vw - 20px);
+        left: 10px;
+        top: 10px;
+      }
+
+      #panel input,
+      #panel select,
+      #panel button {
         font-size: 18px;
         padding: 12px;
+      }
     }
-}
-</style>
-
+  </style>
 </head>
 
 <body>
+  <div id="panel">
+    <input id="search" placeholder="Otsi linna või kohta">
 
-<div id="panel">
+    <select id="filter">
+      <option value="all">Kõik</option>
+      <option value="hooaja toit">Hooaja toit</option>
+      <option value="garaažimüük">Garaažimüük</option>
+      <option value="hoovimüük">Hoovimüük</option>
+      <option value="second-hand">Second-hand</option>
+      <option value="riided">Riided</option>
+      <option value="raamatud">Raamatud</option>
+      <option value="tehnika">Tehnika</option>
+      <option value="tasuta">Tasuta</option>
+    </select>
 
-<input id="search" placeholder="Otsi linna või kohta">
+    <button onclick="applyFilters()">Rakenda</button>
+    <div id="status">Laadin andmeid…</div>
+  </div>
 
-<select id="filter">
-<option value="all">Kõik</option>
-<option value="hooaja toit">Hooaja toit</option>
-<option value="garaažimüük">Garaažimüük</option>
-<option value="hoovimüük">Hoovimüük</option>
-<option value="second-hand">Second-hand</option>
-<option value="riided">Riided</option>
-<option value="raamatud">Raamatud</option>
-<option value="tehnika">Tehnika</option>
-<option value="tasuta">Tasuta</option>
-</select>
+  <div id="map"></div>
 
-<button onclick="applyFilters()">Rakenda</button>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 
-</div>
+  <script>
+    const map = L.map("map").setView([58.7, 25.0], 7);
 
-<div id="map"></div>
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "© OpenStreetMap"
+    }).addTo(map);
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
-<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    const markers = L.markerClusterGroup();
+    map.addLayer(markers);
 
+    const csvURL =
+      "https://docs.google.com/spreadsheets/d/e/2PACX-1vRJnBTGUcESoMf7GV4h9oZs9FgVvw_mS1o4xp79WaP7zGKD1lHwuQp3iPVYnTWrMRMKCxUrN7uA0VAX/pub?output=csv";
 
-<script>
+    let allData = [];
 
-const map = L.map('map').setView([58.7,25.0],7);
-
-L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
-    attribution:'© OpenStreetMap'
-}).addTo(map);
-
-
-const markers = L.markerClusterGroup();
-map.addLayer(markers);
-
-
-const csvURL =
-"https://docs.google.com/spreadsheets/d/e/2PACX-1vRJnBTGUcESoMf7GV4h9oZs9FgVvw_mS1o4xp79WaP7zGKD1lHwuQp3iPVYnTWrMRMKCxUrN7uA0VAX/pub?output=csv";
-
-
-let allData=[];
-
-
-Papa.parse(csvURL,{
-    download:true,
-    header:true,
-    skipEmptyLines:true,
-
-    complete:function(results){
-
-        allData = results.data;
-
-        console.log(allData);
-
-        renderMarkers(allData);
+    function getValue(row, names) {
+      for (const name of names) {
+        if (row[name] !== undefined && row[name] !== null) {
+          return String(row[name]).trim();
+        }
+      }
+      return "";
     }
-});
 
+    function escapeHTML(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
 
+    function createWebLink(row) {
+      const webText = getValue(row, [
+        "Veeb",
+        "veeb",
+        "Veebiaadress",
+        "veebiaadress",
+        "URL",
+        "url",
+        "Link",
+        "link"
+      ]);
 
-function renderMarkers(data){
+      if (!webText) {
+        return "Veeb puudub";
+      }
 
-    markers.clearLayers();
+      try {
+        const address = /^https?:\/\//i.test(webText)
+          ? webText
+          : "https://" + webText;
 
+        const url = new URL(address);
 
-    data.forEach(row=>{
+        return `<a href="${escapeHTML(url.href)}" target="_blank" rel="noopener noreferrer">Ava veebileht</a>`;
+      } catch {
+        return `Vigane veebiaadress: ${escapeHTML(webText)}`;
+      }
+    }
 
+    Papa.parse(csvURL, {
+      download: true,
+      header: true,
+      skipEmptyLines: true,
 
-        const lat=parseFloat(row.Latitude);
-        const lng=parseFloat(row.Longitude);
+      complete: function(results) {
+        allData = results.data;
+        renderMarkers(allData);
+        document.getElementById("status").textContent =
+          `Laaditud kuulutusi: ${allData.length}`;
+      },
 
-
-        if(isNaN(lat)||isNaN(lng)) return;
-
-
-
-        const marker=L.marker([lat,lng]);
-
-
-        let veebText = "";
-
-        if(row.Veeb){
-            veebText = String(row.Veeb).trim();
-        }
-
-
-        let veebLink="";
-
-
-        if(veebText){
-
-            if(!veebText.startsWith("http")){
-                veebLink="https://"+veebText;
-            }
-            else{
-                veebLink=veebText;
-            }
-
-        }
-
-
-
-        let veebHTML = veebLink
-        ? `<a href="${veebLink}" target="_blank" rel="noopener noreferrer">Veeb</a>`
-        : `Veeb puudub`;
-
-
-
-        marker.bindPopup(`
-
-        <b>${row.Nimi || ""}</b><br>
-        ${row.Aadress || ""}<br>
-        🏙 ${row.Linn || ""}<br>
-        🕒 ${row.Kellaaeg || ""}<br>
-        🏷 ${row.Tüüp || ""}<br>
-        🔗 ${veebHTML}
-
-        `);
-
-
-
-        markers.addLayer(marker);
-
-
+      error: function() {
+        document.getElementById("status").textContent =
+          "Andmete laadimine ebaõnnestus.";
+      }
     });
 
-}
+    function renderMarkers(data) {
+      markers.clearLayers();
 
+      let markerCount = 0;
 
+      data.forEach(row => {
+        const lat = parseFloat(getValue(row, ["Latitude", "latitude", "Laiuskraad"]));
+        const lng = parseFloat(getValue(row, ["Longitude", "longitude", "Pikkuskraad"]));
 
+        if (isNaN(lat) || isNaN(lng)) return;
 
-function applyFilters(){
+        const name = getValue(row, ["Nimi", "nimi"]);
+        const address = getValue(row, ["Aadress", "aadress"]);
+        const city = getValue(row, ["Linn", "linn"]);
+        const time = getValue(row, ["Kellaaeg", "kellaaeg"]);
+        const type = getValue(row, ["Tüüp", "tüüp"]);
+        const webHTML = createWebLink(row);
 
+        const marker = L.marker([lat, lng]);
 
-const search=document.getElementById("search").value.toLowerCase();
+        marker.bindPopup(`
+          <b>${escapeHTML(name)}</b><br>
+          ${escapeHTML(address)}<br>
+          🏙 ${escapeHTML(city)}<br>
+          🕒 ${escapeHTML(time)}<br>
+          🏷 ${escapeHTML(type)}<br>
+          🔗 ${webHTML}
+        `);
 
-const filter=document.getElementById("filter").value;
+        markers.addLayer(marker);
+        markerCount++;
+      });
 
+      if (data.length > 0) {
+        document.getElementById("status").textContent =
+          `Näitan kaardil: ${markerCount}`;
+      }
+    }
 
+    function applyFilters() {
+      const search = document.getElementById("search").value.toLowerCase().trim();
+      const filter = document.getElementById("filter").value.toLowerCase();
 
-const filtered=allData.filter(row=>{
+      const filtered = allData.filter(row => {
+        const city = getValue(row, ["Linn", "linn"]).toLowerCase();
+        const address = getValue(row, ["Aadress", "aadress"]).toLowerCase();
+        const name = getValue(row, ["Nimi", "nimi"]).toLowerCase();
+        const type = getValue(row, ["Tüüp", "tüüp"]).toLowerCase();
 
+        const cityMatch =
+          city.includes(search) ||
+          address.includes(search) ||
+          name.includes(search);
 
-const cityMatch=
+        const typeMatch = filter === "all" || type === filter;
 
-(row.Linn||"").toLowerCase().includes(search)
+        return cityMatch && typeMatch;
+      });
 
-||
-
-(row.Aadress||"").toLowerCase().includes(search)
-
-||
-
-(row.Nimi||"").toLowerCase().includes(search);
-
-
-
-const type=(row.Tüüp||"").toLowerCase();
-
-
-const typeMatch =
-filter==="all" || type===filter;
-
-
-return cityMatch && typeMatch;
-
-
-});
-
-
-renderMarkers(filtered);
-
-
-}
-
-
-</script>
-
+      renderMarkers(filtered);
+      document.getElementById("status").textContent =
+        `Leitud kuulutusi: ${filtered.length}`;
+    }
+  </script>
 </body>
 </html>
