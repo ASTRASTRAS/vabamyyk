@@ -87,13 +87,8 @@
     }
 
     @keyframes move-banner {
-      from {
-        transform: translateX(0);
-      }
-
-      to {
-        transform: translateX(-50%);
-      }
+      from { transform: translateX(0); }
+      to { transform: translateX(-50%); }
     }
 
     @media (max-width: 700px) {
@@ -111,7 +106,7 @@
 
 <body>
   <div id="panel">
-    <input id="search" placeholder="Otsi linna või kohta">
+    <input id="search" placeholder="Otsi linna, tüüpi või kohta">
 
     <select id="filter">
       <option value="all">Kõik</option>
@@ -152,7 +147,10 @@
   <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 
   <script>
-    const map = L.map("map").setView([58.7, 25.0], 7);
+    const estoniaCenter = [58.7, 25.0];
+    const estoniaZoom = 7;
+
+    const map = L.map("map").setView(estoniaCenter, estoniaZoom);
 
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: "© OpenStreetMap"
@@ -213,6 +211,7 @@
       complete: function(results) {
         allData = results.data;
         renderMarkers(allData);
+
         document.getElementById("status").textContent =
           `Laaditud kuulutusi: ${allData.length}`;
       },
@@ -267,7 +266,7 @@
         map.setView(points[0], 14);
       } else if (points.length > 1) {
         map.fitBounds(points, {
-          padding: [40, 40],
+          padding: [40, 100],
           maxZoom: 14
         });
       }
@@ -283,18 +282,23 @@
         const name = getValue(row, ["Nimi", "nimi"]).toLowerCase();
         const type = getValue(row, ["Tüüp", "tüüp"]).toLowerCase();
 
-        return (
-          (city.includes(search) ||
-            address.includes(search) ||
-            name.includes(search)) &&
-          (filter === "all" || type === filter)
-        );
+        const searchMatch =
+          city.includes(search) ||
+          address.includes(search) ||
+          name.includes(search) ||
+          type.includes(search);
+
+        const typeMatch = filter === "all" || type === filter;
+
+        return searchMatch && typeMatch;
       });
 
       renderMarkers(filtered);
 
-      if (search) {
+      if (search || filter !== "all") {
         zoomToResults(filtered);
+      } else {
+        map.setView(estoniaCenter, estoniaZoom);
       }
 
       document.getElementById("status").textContent =
