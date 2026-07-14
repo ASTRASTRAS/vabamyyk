@@ -3,7 +3,6 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-
   <title>Eesti müügikaart</title>
 
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
@@ -49,21 +48,11 @@
     #status {
       font-size: 14px;
       color: #555;
-      margin: 2px 0 0;
     }
 
     @media (max-width: 700px) {
       #panel {
         width: calc(100vw - 20px);
-        left: 10px;
-        top: 10px;
-      }
-
-      #panel input,
-      #panel select,
-      #panel button {
-        font-size: 18px;
-        padding: 12px;
       }
     }
   </style>
@@ -130,19 +119,11 @@
 
     function createWebLink(row) {
       const webText = getValue(row, [
-        "Veeb",
-        "veeb",
-        "Veebiaadress",
-        "veebiaadress",
-        "URL",
-        "url",
-        "Link",
-        "link"
+        "Veeb", "veeb", "Veebiaadress", "veebiaadress",
+        "URL", "url", "Link", "link"
       ]);
 
-      if (!webText) {
-        return "Veeb puudub";
-      }
+      if (!webText) return "Veeb puudub";
 
       try {
         const address = /^https?:\/\//i.test(webText)
@@ -178,8 +159,6 @@
     function renderMarkers(data) {
       markers.clearLayers();
 
-      let markerCount = 0;
-
       data.forEach(row => {
         const lat = parseFloat(getValue(row, ["Latitude", "latitude", "Laiuskraad"]));
         const lng = parseFloat(getValue(row, ["Longitude", "longitude", "Pikkuskraad"]));
@@ -191,7 +170,6 @@
         const city = getValue(row, ["Linn", "linn"]);
         const time = getValue(row, ["Kellaaeg", "kellaaeg"]);
         const type = getValue(row, ["Tüüp", "tüüp"]);
-        const webHTML = createWebLink(row);
 
         const marker = L.marker([lat, lng]);
 
@@ -201,16 +179,30 @@
           🏙 ${escapeHTML(city)}<br>
           🕒 ${escapeHTML(time)}<br>
           🏷 ${escapeHTML(type)}<br>
-          🔗 ${webHTML}
+          🔗 ${createWebLink(row)}
         `);
 
         markers.addLayer(marker);
-        markerCount++;
       });
+    }
 
-      if (data.length > 0) {
-        document.getElementById("status").textContent =
-          `Näitan kaardil: ${markerCount}`;
+    function zoomToResults(data) {
+      const points = data
+        .map(row => {
+          const lat = parseFloat(getValue(row, ["Latitude", "latitude", "Laiuskraad"]));
+          const lng = parseFloat(getValue(row, ["Longitude", "longitude", "Pikkuskraad"]));
+
+          return isNaN(lat) || isNaN(lng) ? null : [lat, lng];
+        })
+        .filter(Boolean);
+
+      if (points.length === 1) {
+        map.setView(points[0], 14);
+      } else if (points.length > 1) {
+        map.fitBounds(points, {
+          padding: [40, 40],
+          maxZoom: 14
+        });
       }
     }
 
@@ -224,17 +216,22 @@
         const name = getValue(row, ["Nimi", "nimi"]).toLowerCase();
         const type = getValue(row, ["Tüüp", "tüüp"]).toLowerCase();
 
-        const cityMatch =
+        const searchMatch =
           city.includes(search) ||
           address.includes(search) ||
           name.includes(search);
 
         const typeMatch = filter === "all" || type === filter;
 
-        return cityMatch && typeMatch;
+        return searchMatch && typeMatch;
       });
 
       renderMarkers(filtered);
+
+      if (search) {
+        zoomToResults(filtered);
+      }
+
       document.getElementById("status").textContent =
         `Leitud kuulutusi: ${filtered.length}`;
     }
