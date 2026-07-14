@@ -50,9 +50,60 @@
       color: #555;
     }
 
+    #banners {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 10000;
+    }
+
+    .banner {
+      height: 42px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      background: #58a947;
+      border-top: 1px solid #287b28;
+      color: #000;
+      font-size: 18px;
+      font-weight: bold;
+      white-space: nowrap;
+    }
+
+    .banner-track {
+      display: flex;
+      width: max-content;
+      animation: move-banner 22s linear infinite;
+    }
+
+    .banner-track span {
+      display: block;
+      padding-right: 100px;
+    }
+
+    .banner.second .banner-track {
+      animation-duration: 18s;
+    }
+
+    @keyframes move-banner {
+      from {
+        transform: translateX(0);
+      }
+
+      to {
+        transform: translateX(-50%);
+      }
+    }
+
     @media (max-width: 700px) {
       #panel {
         width: calc(100vw - 20px);
+      }
+
+      .banner {
+        height: 38px;
+        font-size: 15px;
       }
     }
   </style>
@@ -79,6 +130,22 @@
   </div>
 
   <div id="map"></div>
+
+  <div id="banners">
+    <div class="banner">
+      <div class="banner-track">
+        <span>Soovite reklaamida ettevõtet? Võtke ühendust. Hinnad soodsad.</span>
+        <span aria-hidden="true">Soovite reklaamida ettevõtet? Võtke ühendust. Hinnad soodsad.</span>
+      </div>
+    </div>
+
+    <div class="banner second">
+      <div class="banner-track">
+        <span>Ostke riided: temuke.com!</span>
+        <span aria-hidden="true">Ostke riided: temuke.com!</span>
+      </div>
+    </div>
+  </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
@@ -216,14 +283,12 @@
         const name = getValue(row, ["Nimi", "nimi"]).toLowerCase();
         const type = getValue(row, ["Tüüp", "tüüp"]).toLowerCase();
 
-        const searchMatch =
-          city.includes(search) ||
-          address.includes(search) ||
-          name.includes(search);
-
-        const typeMatch = filter === "all" || type === filter;
-
-        return searchMatch && typeMatch;
+        return (
+          (city.includes(search) ||
+            address.includes(search) ||
+            name.includes(search)) &&
+          (filter === "all" || type === filter)
+        );
       });
 
       renderMarkers(filtered);
