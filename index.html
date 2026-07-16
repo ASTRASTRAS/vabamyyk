@@ -149,6 +149,8 @@
     <select id="filter">
       <option value="all">Kõik</option>
       <option value="hooaja toit">Hooaja toit</option>
+       <option value="kodukohvik">Kodukohvik</option>
+       <option value="käsitöö">Käsitöö</option>
       <option value="garaažimüük">Garaažimüük</option>
       <option value="hoovimüük">Hoovimüük</option>
       <option value="second-hand">Second-hand</option>
@@ -295,7 +297,7 @@
           <b>${escapeHTML(getValue(row, ["Nimi", "nimi"]))}</b><br>
           ${escapeHTML(getValue(row, ["Aadress", "aadress"]))}<br>
           🏙 ${escapeHTML(getValue(row, ["Linn", "linn"]))}<br>
-          🕒 ${escapeHTML(getValue(row, ["Kellaaeg", "kellaaeg"]))}<br>
+          🕒 ${escapeHTML(getValue(row, ["Aeg", "aeg"]))}<br>
           🏷 ${escapeHTML(getValue(row, ["Tüüp", "tüüp"]))}<br>
           🔗 ${createWebLink(row)}
         `);
