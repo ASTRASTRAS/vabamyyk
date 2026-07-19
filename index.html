@@ -156,7 +156,8 @@
       <option value="second-hand">Second-hand</option>
       <option value="riided">Riided</option>
       <option value="raamatud">Raamatud</option>
-      <option value="tehnika">Tehnika</option>
+      <option value="uunikum">Uunikum</option>
+      <option value="vanavara">Vanavara</option>
       <option value="tasuta">Tasuta</option>
     </select>
 
@@ -297,10 +298,10 @@
           <b>${escapeHTML(getValue(row, ["Nimi", "nimi"]))}</b><br>
           ${escapeHTML(getValue(row, ["Aadress", "aadress"]))}<br>
           🏙 ${escapeHTML(getValue(row, ["Linn", "linn"]))}<br>
-          ${escapeHTML(getValue(row, ["Mobiilinumber", "mobiilinumber"]))}<br>
+          ${escapeHTML(getValue(row, ["Mobiilinumber/E-post", "mobiilinumber/e-post"]))}<br>
           ${escapeHTML(getValue(row, ["Kuupäev", "kuupäev"]))}<br>
           🕒 ${escapeHTML(getValue(row, ["Kellaaeg", "kellaaeg"]))}<br>
-          🏷 ${escapeHTML(getValue(row, ["Tüüp", "tüüp"]))}<br>
+          🏷 ${escapeHTML(getValue(row, ["Kaubatüüp", "kaubatüüp"]))}<br>
           🔗 ${createWebLink(row)}
         `);
 
@@ -333,7 +334,7 @@
         const city = getValue(row, ["Linn", "linn"]).toLowerCase();
         const address = getValue(row, ["Aadress", "aadress"]).toLowerCase();
         const name = getValue(row, ["Nimi", "nimi"]).toLowerCase();
-        const type = getValue(row, ["Tüüp", "tüüp"]).toLowerCase();
+        const type = getValue(row, ["Kaubatüüp", "kaubatüüp"]).toLowerCase();
 
         return (
           (city.includes(search) ||
