@@ -144,21 +144,18 @@
 
 <body>
   <div id="panel">
-    <input id="search" placeholder="Otsi nime, tänava või linna järgi">
+    <input id="search" placeholder="Otsi nime, tänava, linna või kategooria järgi">
 
-    <select id="filter">
-      <option value="all">Kõik</option>
-      <option value="hooaja toit">Hooaja toit</option>
-       <option value="kodukohvik">Kodukohvik</option>
-       <option value="käsitöö">Käsitöö</option>
-      <option value="garaažimüük">Garaažimüük</option>
-      <option value="hoovimüük">Hoovimüük</option>
-      <option value="second-hand">Second-hand</option>
-      <option value="riided">Riided</option>
-      <option value="raamatud">Raamatud</option>
-      <option value="uunikum">Uunikum</option>
-      <option value="vanavara">Vanavara</option>
-      <option value="tasuta">Tasuta</option>
+    <select class="category-filter" aria-label="Esimene kategooria">
+      <option value="">Kategooria 1</option>
+    </select>
+
+    <select class="category-filter" aria-label="Teine kategooria">
+      <option value="">Kategooria 2</option>
+    </select>
+
+    <select class="category-filter" aria-label="Kolmas kategooria">
+      <option value="">Kategooria 3</option>
     </select>
 
     <button onclick="applyFilters()">Rakenda</button>
@@ -194,6 +191,29 @@
   <script>
     const estoniaCenter = [58.7, 25.0];
     const estoniaZoom = 7;
+
+    const categories = [
+      "Hooaja toit",
+      "Kodukohvik",
+      "Käsitöö",
+      "Garaažimüük",
+      "Hoovimüük",
+      "Second-hand",
+      "Riided",
+      "Raamatud",
+      "Uunikum",
+      "Vanavara",
+      "Tasuta"
+    ];
+
+    document.querySelectorAll(".category-filter").forEach(select => {
+      categories.forEach(category => {
+        const option = document.createElement("option");
+        option.value = category;
+        option.textContent = category;
+        select.appendChild(option);
+      });
+    });
 
     const map = L.map("map").setView(estoniaCenter, estoniaZoom);
 
@@ -235,6 +255,17 @@
       return "";
     }
 
+    function normalize(value) {
+      return String(value ?? "").trim().toLowerCase();
+    }
+
+    function getCategories(row) {
+      return getValue(row, ["Kaubatüüp", "kaubatüüp"])
+        .split(";")
+        .map(category => normalize(category))
+        .filter(Boolean);
+    }
+
     function escapeHTML(value) {
       return String(value ?? "")
         .replaceAll("&", "&amp;")
@@ -273,6 +304,7 @@
       complete: function(results) {
         allData = results.data;
         renderMarkers(allData);
+
         document.getElementById("status").textContent =
           `Laaditud kuulutusi: ${allData.length}`;
       },
@@ -314,6 +346,7 @@
       const points = data.map(row => {
         const lat = parseFloat(getValue(row, ["Latitude", "latitude", "Laiuskraad"]));
         const lng = parseFloat(getValue(row, ["Longitude", "longitude", "Pikkuskraad"]));
+
         return isNaN(lat) || isNaN(lng) ? null : [lat, lng];
       }).filter(Boolean);
 
@@ -328,27 +361,34 @@
     }
 
     function applyFilters() {
-      const search = document.getElementById("search").value.toLowerCase().trim();
-      const filter = document.getElementById("filter").value.toLowerCase();
+      const search = normalize(document.getElementById("search").value);
+
+      const selectedCategories = [...document.querySelectorAll(".category-filter")]
+        .map(select => normalize(select.value))
+        .filter(Boolean);
 
       const filtered = allData.filter(row => {
-        const city = getValue(row, ["Linn", "linn"]).toLowerCase();
-        const address = getValue(row, ["Aadress", "aadress"]).toLowerCase();
-        const name = getValue(row, ["Nimi", "nimi"]).toLowerCase();
-        const type = getValue(row, ["Kaubatüüp", "kaubatüüp"]).toLowerCase();
+        const city = normalize(getValue(row, ["Linn", "linn"]));
+        const address = normalize(getValue(row, ["Aadress", "aadress"]));
+        const name = normalize(getValue(row, ["Nimi", "nimi"]));
+        const rowCategories = getCategories(row);
 
-        return (
-          (city.includes(search) ||
-            address.includes(search) ||
-            name.includes(search) ||
-            type.includes(search)) &&
-          (filter === "all" || type === filter)
-        );
+        const searchMatch =
+          city.includes(search) ||
+          address.includes(search) ||
+          name.includes(search) ||
+          rowCategories.some(category => category.includes(search));
+
+        const categoryMatch =
+          selectedCategories.length === 0 ||
+          selectedCategories.some(category => rowCategories.includes(category));
+
+        return searchMatch && categoryMatch;
       });
 
       renderMarkers(filtered);
 
-      if (search || filter !== "all") {
+      if (search || selectedCategories.length > 0) {
         zoomToResults(filtered);
       } else {
         map.setView(estoniaCenter, estoniaZoom);
