@@ -25,7 +25,6 @@
       margin: 0;
       padding: 0;
       overflow: hidden;
-      overscroll-behavior: none;
       font-family: Arial, sans-serif;
     }
 
@@ -73,7 +72,7 @@
       right: 0;
       bottom: env(safe-area-inset-bottom, 0px);
       z-index: 10000;
-      pointer-events: none;
+      pointer-events: auto;
     }
 
     .banner {
@@ -92,6 +91,9 @@
     .banner-track {
       display: flex;
       width: max-content;
+      color: #000;
+      text-decoration: none;
+      cursor: pointer;
       animation: move-banner 22s linear infinite;
     }
 
@@ -122,14 +124,6 @@
         padding: 10px;
       }
 
-      #panel input,
-      #panel select,
-      #panel button {
-        font-size: 16px;
-        padding: 9px;
-        margin-bottom: 6px;
-      }
-
       #banners {
         bottom: max(10px, env(safe-area-inset-bottom, 0px));
       }
@@ -144,7 +138,7 @@
 
 <body>
   <div id="panel">
-    <input id="search" placeholder="Otsi nime, tänava või asula järgi">
+    <input id="search" placeholder="Otsi nime, tänava või linna järgi">
 
     <select id="filter">
       <option value="all">Kategooria</option>
@@ -169,21 +163,30 @@
 
   <div id="banners">
     <div class="banner">
-      <div class="banner-track"
-           data-text="Soovite reklaamida ettevõtet? Võtke ühendust. Hinnad soodsad.">
-      </div>
+      <a class="banner-track"
+         href="https://www.facebook.com/profile.php?id=61592129100126"
+         target="_blank"
+         rel="noopener noreferrer"
+         data-text="Soovite reklaamida ettevõtet? Võtke ühendust. Hinnad soodsad.">
+      </a>
     </div>
 
     <div class="banner second">
-      <div class="banner-track"
-           data-text="Ostke riided: temuke.com!">
-      </div>
+      <a class="banner-track"
+         href="https://palgimurdja.ee"
+         target="_blank"
+         rel="noopener noreferrer"
+         data-text="Külasta Palgimurdja.ee veebilehte!">
+      </a>
     </div>
 
     <div class="banner third">
-      <div class="banner-track"
-           data-text="Soovite näha siin oma ettevõtte reklaami? Võtke ühendust meie Facebooki leheküljel.">
-      </div>
+      <a class="banner-track"
+         href="https://docs.google.com/forms/d/e/1FAIpQLSc9ekH4rgdLi--I9XknxFnerg-azQQKPHqoftVcQgkGMIauzQ/viewform"
+         target="_blank"
+         rel="noopener noreferrer"
+         data-text="Soovite näha siin oma ettevõtte reklaami? Võtke ühendust meie Facebooki leheküljel.">
+      </a>
     </div>
   </div>
 
@@ -240,8 +243,17 @@
     }
 
     function getCategories(row) {
-      return getValue(row, ["Kaubatüüp", "kaubatüüp"])
-        .split(";")
+      const categoryText = getValue(row, [
+        "Kaubatüüp",
+        "kaubatüüp",
+        "Kauba tüüp",
+        "kauba tüüp",
+        "Kategooria",
+        "kategooria"
+      ]);
+
+      return categoryText
+        .split(/[;,]/)
         .map(category => normalize(category))
         .filter(Boolean);
     }
@@ -284,7 +296,6 @@
       complete: function(results) {
         allData = results.data;
         renderMarkers(allData);
-
         document.getElementById("status").textContent =
           `Laaditud kuulutusi: ${allData.length}`;
       },
@@ -313,7 +324,7 @@
           ${escapeHTML(getValue(row, ["Mobiilinumber/E-post", "mobiilinumber/e-post"]))}<br>
           ${escapeHTML(getValue(row, ["Kuupäev", "kuupäev"]))}<br>
           🕒 ${escapeHTML(getValue(row, ["Kellaaeg", "kellaaeg"]))}<br>
-          🏷 ${escapeHTML(getValue(row, ["Kaubatüüp", "kaubatüüp"]))}<br>
+          🏷 ${escapeHTML(getValue(row, ["Kaubatüüp", "kaubatüüp", "Kategooria", "kategooria"]))}<br>
           ${escapeHTML(getValue(row, ["Kaup", "kaup"]))}<br>
           🔗 ${createWebLink(row)}
         `);
