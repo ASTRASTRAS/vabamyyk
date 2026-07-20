@@ -296,6 +296,7 @@
       complete: function(results) {
         allData = results.data;
         renderMarkers(allData);
+
         document.getElementById("status").textContent =
           `Laaditud kuulutusi: ${allData.length}`;
       },
@@ -328,6 +329,12 @@
           ${escapeHTML(getValue(row, ["Kaup", "kaup"]))}<br>
           🔗 ${createWebLink(row)}
         `);
+
+        marker.on("click", function() {
+          map.flyTo([lat, lng], 17, {
+            duration: 0.7
+          });
+        });
 
         markers.addLayer(marker);
       });
