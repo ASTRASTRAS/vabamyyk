@@ -133,6 +133,25 @@
         font-size: 15px;
       }
     }
+    #copyright {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: env(safe-area-inset-bottom, 0px);
+  z-index: 10001;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  color: #333;
+  font-size: 12px;
+  text-align: center;
+}
+
+#banners {
+  bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+}
   </style>
 </head>
 
@@ -188,6 +207,7 @@
          data-text="Soovite näha siin oma ettevõtte reklaami? Võtke ühendust meie Facebooki leheküljel.">
       </a>
     </div>
+    <div id="copyright">© 2026. www.myygikaart.ee. All rights reserved.</div>
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
