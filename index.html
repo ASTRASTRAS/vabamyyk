@@ -45,15 +45,9 @@
       box-shadow: 0 2px 10px rgba(0, 0, 0, .25);
     }
 
-    #panel input,
-    #panel select,
-    #panel button,
-    #listing-form input,
-    #listing-form select,
-    #listing-form textarea,
-    #listing-form button {
-      width: 100%;
+    input, select, textarea, button {
       box-sizing: border-box;
+      width: 100%;
       padding: 10px;
       margin-bottom: 8px;
       font: inherit;
@@ -68,21 +62,8 @@
       font-weight: bold;
     }
 
-    button:hover {
-      background: #286f26;
-    }
-
-    button:disabled {
-      background: #999;
-      cursor: wait;
-    }
-
     .secondary-button {
       background: #1565c0;
-    }
-
-    .secondary-button:hover {
-      background: #0d47a1;
     }
 
     #status {
@@ -96,7 +77,6 @@
       right: 0;
       bottom: calc(24px + env(safe-area-inset-bottom, 0px));
       z-index: 10000;
-      pointer-events: auto;
     }
 
     .banner {
@@ -117,7 +97,6 @@
       width: max-content;
       color: #000;
       text-decoration: none;
-      cursor: pointer;
       animation: move-banner 22s linear infinite;
     }
 
@@ -147,7 +126,6 @@
       background: white;
       color: #333;
       font-size: 12px;
-      text-align: center;
     }
 
     #listing-modal {
@@ -158,7 +136,6 @@
       align-items: center;
       justify-content: center;
       padding: 16px;
-      box-sizing: border-box;
       background: rgba(0, 0, 0, .55);
     }
 
@@ -177,40 +154,30 @@
       border-radius: 14px;
     }
 
-    .modal-box h2 {
-      margin-top: 0;
-    }
-
-    #listing-form textarea {
-      min-height: 100px;
-      resize: vertical;
-    }
-
     .field-label {
       display: block;
-      margin: 4px 0 5px;
-      font-size: 14px;
+      margin-bottom: 5px;
       font-weight: bold;
+      font-size: 14px;
     }
 
     .declaration {
-      margin: 14px 0 8px;
       padding: 10px;
-      background: #f2f2f2;
+      margin: 12px 0 8px;
+      background: #f1f1f1;
       border-radius: 7px;
-      font-size: 14px;
       line-height: 1.45;
+      font-size: 14px;
     }
 
     .radio-line {
       display: flex;
+      gap: 8px;
       align-items: center;
-      gap: 7px;
       margin-bottom: 8px;
-      font-size: 16px;
     }
 
-    #listing-form input[type="radio"] {
+    .radio-line input {
       width: auto;
       margin: 0;
     }
@@ -238,7 +205,6 @@
 
     @media (max-width: 700px) {
       #panel {
-        top: calc(8px + env(safe-area-inset-top, 0px));
         width: calc(100vw - 20px);
         padding: 10px;
       }
@@ -250,10 +216,6 @@
       .banner {
         height: 38px;
         font-size: 15px;
-      }
-
-      .modal-box {
-        padding: 16px;
       }
     }
   </style>
@@ -291,25 +253,27 @@
       <h2 id="form-title">Lisa müügikoht</h2>
 
       <form id="listing-form">
-        <label class="field-label" for="form-name">Nimi</label>
-        <input id="form-name" required placeholder="Näiteks: Mari hoovimüük">
+        <label class="field-label">Nimi</label>
+        <input id="form-name" required>
 
-        <label class="field-label" for="form-address">Aadress</label>
-        <input id="form-address" required placeholder="Näiteks: Vanemuise 51, 50410">
+        <label class="field-label">Aadress</label>
+        <input id="form-address" required placeholder="Näiteks: Pikk 6, 50410">
 
-        <label class="field-label" for="form-city">Linn või asula</label>
+        <label class="field-label">Linn või vald</label>
         <input id="form-city" required placeholder="Näiteks: Tartu">
 
-        <label class="field-label" for="form-start-date">Alguskuupäev</label>
-        <input id="form-start-date" type="date" required>
+        <label class="field-label">Alguskuupäev</label>
+        <input id="form-start-date" required inputmode="numeric"
+               placeholder="12/07/2026" pattern="\d{2}/\d{2}/\d{4}">
 
-        <label class="field-label" for="form-end-date">Lõppkuupäev</label>
-        <input id="form-end-date" type="date" required>
+        <label class="field-label">Lõppkuupäev</label>
+        <input id="form-end-date" required inputmode="numeric"
+               placeholder="12/07/2026" pattern="\d{2}/\d{2}/\d{4}">
 
-        <label class="field-label" for="form-time-range">Kellaaegade vahemik</label>
+        <label class="field-label">Kellaaegade vahemik</label>
         <input id="form-time-range" required placeholder="Näiteks: E-R 10-17">
 
-        <label class="field-label" for="form-category">Kategooria</label>
+        <label class="field-label">Kategooria</label>
         <select id="form-category" required>
           <option value="">Vali kategooria</option>
           <option value="Hooaja toit">Hooaja toit</option>
@@ -325,13 +289,13 @@
           <option value="Tasuta">Tasuta</option>
         </select>
 
-        <label class="field-label" for="form-description">Kirjeldus</label>
-        <textarea id="form-description" required placeholder="Mida müüd või pakud?"></textarea>
+        <label class="field-label">Kirjeldus</label>
+        <textarea id="form-description" required></textarea>
 
-        <label class="field-label" for="form-phone">Telefon või e-post</label>
-        <input id="form-phone" required placeholder="Näiteks: 5555 5555 või nimi@email.ee">
+        <label class="field-label">Telefon või e-post</label>
+        <input id="form-phone" required>
 
-        <label class="field-label" for="form-website">Veebiaadress</label>
+        <label class="field-label">Veebiaadress</label>
         <input id="form-website" type="url" placeholder="Soovi korral">
 
         <div class="declaration">
@@ -378,10 +342,10 @@
 
     <div class="banner third">
       <a class="banner-track"
-         href="https://www.facebook.com/profile.php?id=61592129100126"
+         href="https://docs.google.com/forms/d/e/1FAIpQLSc9ekH4rgdLi--I9XknxFnerg-azQQKPHqoftVcQgkGMIauzQ/viewform"
          target="_blank"
          rel="noopener noreferrer"
-         data-text="Aseta oma ettevõtmine kaardile. Tasuta eraisikule ja üksikisikust ettevõtjale. Lisa müügikoht.">
+         data-text="Aseta oma ettevõtmine kaardile. Tasuta eraisikule ja üksikisikust ettevõtjale. Täida blankett.">
       </a>
     </div>
   </div>
@@ -395,10 +359,7 @@
     const API_URL =
       "https://script.google.com/macros/s/AKfycbwfRrG_WXEgPD_HMJPh5LlitsC9QtWarrey3Ei8-zUJGDgfbQLdE3W4MawtNPC7pgnZ/exec";
 
-    const estoniaCenter = [58.7, 25.0];
-    const estoniaZoom = 7;
-
-    const map = L.map("map").setView(estoniaCenter, estoniaZoom);
+    const map = L.map("map").setView([58.7, 25.0], 7);
 
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: "© OpenStreetMap"
@@ -409,21 +370,6 @@
 
     let allData = [];
     let editToken = "";
-
-    function fillBanners() {
-      document.querySelectorAll(".banner-track").forEach(track => {
-        const text = track.dataset.text;
-        track.innerHTML = "";
-
-        while (track.scrollWidth < window.innerWidth * 2) {
-          const item = document.createElement("span");
-          item.textContent = text;
-          track.appendChild(item);
-        }
-
-        track.innerHTML += track.innerHTML;
-      });
-    }
 
     function getValue(row, names) {
       for (const name of names) {
@@ -438,13 +384,6 @@
       return String(value ?? "").trim().toLowerCase();
     }
 
-    function getCategories(row) {
-      return getValue(row, ["Kaubatüüp", "kaubatüüp"])
-        .split(/[;,]/)
-        .map(category => normalize(category))
-        .filter(Boolean);
-    }
-
     function escapeHTML(value) {
       return String(value ?? "")
         .replaceAll("&", "&amp;")
@@ -454,17 +393,76 @@
         .replaceAll("'", "&#039;");
     }
 
-    function createWebLink(row) {
-      const webText = getValue(row, ["Veeb", "veeb"]);
+    function formatDate(date) {
+      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      return `${day}/${month}/${date.getFullYear()}`;
+    }
 
-      if (!webText) return "Veeb puudub";
+    function parseDate(text) {
+      const match = String(text).trim().match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+
+      if (!match) return null;
+
+      const date = new Date(
+        Number(match[3]),
+        Number(match[2]) - 1,
+        Number(match[1])
+      );
+
+      if (
+        date.getFullYear() !== Number(match[3]) ||
+        date.getMonth() !== Number(match[2]) - 1 ||
+        date.getDate() !== Number(match[1])
+      ) return null;
+
+      date.setHours(0, 0, 0, 0);
+      return date;
+    }
+
+    function validateDates() {
+      const start = parseDate(document.getElementById("form-start-date").value);
+      const end = parseDate(document.getElementById("form-end-date").value);
+
+      if (!start || !end) {
+        return "Kuupäev peab olema kujul 12/07/2026.";
+      }
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      if (start < today) {
+        return "Alguskuupäev ei tohi olla minevikus.";
+      }
+
+      if (end < start) {
+        return "Lõppkuupäev ei tohi olla alguskuupäevast varasem.";
+      }
+
+      const maximum = new Date(start);
+      maximum.setMonth(maximum.getMonth() + 2);
+
+      if (end > maximum) {
+        return "Kuupäevavahemik võib olla maksimaalselt kaks kuud.";
+      }
+
+      return "";
+    }
+
+    function getCategories(row) {
+      return getValue(row, ["Kaubatüüp"])
+        .split(/[;,]/)
+        .map(normalize)
+        .filter(Boolean);
+    }
+
+    function createWebLink(row) {
+      const web = getValue(row, ["Veeb"]);
+
+      if (!web) return "Veeb puudub";
 
       try {
-        const address = /^https?:\/\//i.test(webText)
-          ? webText
-          : "https://" + webText;
-
-        const url = new URL(address);
+        const url = new URL(/^https?:\/\//i.test(web) ? web : `https://${web}`);
 
         return `<a href="${escapeHTML(url.href)}" target="_blank" rel="noopener noreferrer">Ava veebileht</a>`;
       } catch {
@@ -476,10 +474,7 @@
       const start = getValue(row, ["Kuupäev algus"]);
       const end = getValue(row, ["Kuupäev lõpp"]);
 
-      if (start && end) {
-        return start === end ? start : `${start} – ${end}`;
-      }
-
+      if (start && end) return start === end ? start : `${start} – ${end}`;
       return getValue(row, ["Kuupäev"]);
     }
 
@@ -488,9 +483,7 @@
         const response = await fetch(`${API_URL}?action=list`);
         const result = await response.json();
 
-        if (!result.success) {
-          throw new Error(result.error || "Andmete laadimine ebaõnnestus.");
-        }
+        if (!result.success) throw new Error(result.error);
 
         allData = result.data;
         renderMarkers(allData);
@@ -507,17 +500,17 @@
       markers.clearLayers();
 
       data.forEach(row => {
-        const lat = parseFloat(getValue(row, ["Latitude", "latitude"]));
-        const lng = parseFloat(getValue(row, ["Longitude", "longitude"]));
+        const lat = parseFloat(getValue(row, ["Latitude"]));
+        const lng = parseFloat(getValue(row, ["Longitude"]));
 
         if (isNaN(lat) || isNaN(lng)) return;
 
         const marker = L.marker([lat, lng]);
 
         marker.bindPopup(`
-          <b>${escapeHTML(getValue(row, ["Nimi", "nimi"]))}</b><br>
-          ${escapeHTML(getValue(row, ["Aadress", "aadress"]))}<br>
-          🏙 ${escapeHTML(getValue(row, ["Linn", "linn"]))}<br>
+          <b>${escapeHTML(getValue(row, ["Nimi"]))}</b><br>
+          ${escapeHTML(getValue(row, ["Aadress"]))}<br>
+          🏙 ${escapeHTML(getValue(row, ["Linn"]))}<br>
           ${escapeHTML(getValue(row, ["Mobiilinumber/E-post"]))}<br>
           📅 ${escapeHTML(dateText(row))}<br>
           🕒 ${escapeHTML(getValue(row, ["Kellaaegade vahemik", "Kellaaeg"]))}<br>
@@ -534,83 +527,42 @@
       });
     }
 
-    function zoomToResults(data) {
-      const points = data.map(row => {
-        const lat = parseFloat(getValue(row, ["Latitude", "latitude"]));
-        const lng = parseFloat(getValue(row, ["Longitude", "longitude"]));
-
-        return isNaN(lat) || isNaN(lng) ? null : [lat, lng];
-      }).filter(Boolean);
-
-      if (points.length === 1) {
-        map.setView(points[0], 14);
-      } else if (points.length > 1) {
-        map.fitBounds(points, {
-          padding: [40, 140],
-          maxZoom: 14
-        });
-      }
-    }
-
     function applyFilters() {
       const search = normalize(document.getElementById("search").value);
       const filter = normalize(document.getElementById("filter").value);
 
       const filtered = allData.filter(row => {
-        const city = normalize(getValue(row, ["Linn", "linn"]));
-        const address = normalize(getValue(row, ["Aadress", "aadress"]));
-        const name = normalize(getValue(row, ["Nimi", "nimi"]));
-        const rowCategories = getCategories(row);
+        const city = normalize(getValue(row, ["Linn"]));
+        const address = normalize(getValue(row, ["Aadress"]));
+        const name = normalize(getValue(row, ["Nimi"]));
+        const categories = getCategories(row);
 
-        const searchMatch =
-          city.includes(search) ||
-          address.includes(search) ||
-          name.includes(search) ||
-          rowCategories.some(category => category.includes(search));
-
-        const categoryMatch =
-          filter === "all" || rowCategories.includes(filter);
-
-        return searchMatch && categoryMatch;
+        return (
+          (city.includes(search) ||
+            address.includes(search) ||
+            name.includes(search) ||
+            categories.some(category => category.includes(search))) &&
+          (filter === "all" || categories.includes(filter))
+        );
       });
 
       renderMarkers(filtered);
 
-      if (search || filter !== "all") {
-        zoomToResults(filtered);
-      } else {
-        map.setView(estoniaCenter, estoniaZoom);
+      const points = filtered.map(row => [
+        parseFloat(getValue(row, ["Latitude"])),
+        parseFloat(getValue(row, ["Longitude"]))
+      ]).filter(point => !isNaN(point[0]) && !isNaN(point[1]));
+
+      if (points.length === 1) {
+        map.setView(points[0], 14);
+      } else if (points.length > 1) {
+        map.fitBounds(points, { padding: [40, 140], maxZoom: 14 });
+      } else if (!search && filter === "all") {
+        map.setView([58.7, 25.0], 7);
       }
 
       document.getElementById("status").textContent =
         `Leitud kuulutusi: ${filtered.length}`;
-    }
-
-    function formatDateForInput(date) {
-      return date.toISOString().slice(0, 10);
-    }
-
-    function setDateLimits() {
-      const tomorrow = new Date();
-      tomorrow.setHours(0, 0, 0, 0);
-      tomorrow.setDate(tomorrow.getDate() + 1);
-
-      const maximum = new Date(tomorrow);
-      maximum.setMonth(maximum.getMonth() + 2);
-
-      const minimumText = formatDateForInput(tomorrow);
-      const maximumText = formatDateForInput(maximum);
-
-      const start = document.getElementById("form-start-date");
-      const end = document.getElementById("form-end-date");
-
-      start.min = minimumText;
-      start.max = maximumText;
-      end.min = start.value || minimumText;
-      end.max = maximumText;
-
-      if (!start.value) start.value = minimumText;
-      if (!end.value) end.value = minimumText;
     }
 
     function openCreateForm() {
@@ -619,7 +571,11 @@
       document.getElementById("submit-button").textContent = "Avalda";
       document.getElementById("listing-form").reset();
       document.getElementById("form-result").innerHTML = "";
-      setDateLimits();
+
+      const today = new Date();
+      document.getElementById("form-start-date").value = formatDate(today);
+      document.getElementById("form-end-date").value = formatDate(today);
+
       document.getElementById("listing-modal").classList.add("visible");
     }
 
@@ -635,7 +591,6 @@
       editToken = token;
       document.getElementById("form-title").textContent = "Muuda müügikohta";
       document.getElementById("submit-button").textContent = "Salvesta muudatused";
-      document.getElementById("form-result").innerHTML = "";
       document.getElementById("listing-modal").classList.add("visible");
 
       try {
@@ -645,9 +600,7 @@
 
         const result = await response.json();
 
-        if (!result.success) {
-          throw new Error(result.error || "Muutmislink ei kehti.");
-        }
+        if (!result.success) throw new Error(result.error);
 
         const row = result.data;
 
@@ -663,30 +616,28 @@
         setFormValue("form-website", getValue(row, ["Veeb"]));
 
         document.querySelector('input[name="confirmation"][value="yes"]').checked = true;
-        setDateLimits();
       } catch (error) {
         document.getElementById("form-result").className = "error";
         document.getElementById("form-result").textContent = error.message;
       }
     }
 
-    document.getElementById("form-start-date").addEventListener("change", () => {
-      document.getElementById("form-end-date").min =
-        document.getElementById("form-start-date").value;
-    });
-
     document.getElementById("listing-form").addEventListener("submit", async event => {
       event.preventDefault();
 
       const resultBox = document.getElementById("form-result");
-      const button = document.getElementById("submit-button");
+      const submitButton = document.getElementById("submit-button");
+      const dateError = validateDates();
+
+      if (dateError) {
+        resultBox.className = "error";
+        resultBox.textContent = dateError;
+        return;
+      }
+
       const confirmation = document.querySelector(
         'input[name="confirmation"]:checked'
       );
-
-      resultBox.className = "";
-      resultBox.textContent = "Salvestan…";
-      button.disabled = true;
 
       const data = {
         action: editToken ? "update" : "create",
@@ -694,8 +645,8 @@
         name: document.getElementById("form-name").value.trim(),
         address: document.getElementById("form-address").value.trim(),
         city: document.getElementById("form-city").value.trim(),
-        startDate: document.getElementById("form-start-date").value,
-        endDate: document.getElementById("form-end-date").value,
+        startDate: document.getElementById("form-start-date").value.trim(),
+        endDate: document.getElementById("form-end-date").value.trim(),
         timeRange: document.getElementById("form-time-range").value.trim(),
         category: document.getElementById("form-category").value,
         description: document.getElementById("form-description").value.trim(),
@@ -704,23 +655,22 @@
         confirmation: confirmation ? confirmation.value : ""
       };
 
+      resultBox.className = "";
+      resultBox.textContent = "Salvestan…";
+      submitButton.disabled = true;
+
       try {
         const response = await fetch(API_URL, {
           method: "POST",
-          headers: {
-            "Content-Type": "text/plain;charset=utf-8"
-          },
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
           body: JSON.stringify(data)
         });
 
         const result = await response.json();
 
-        if (!result.success) {
-          throw new Error(result.error || "Salvestamine ebaõnnestus.");
-        }
+        if (!result.success) throw new Error(result.error);
 
         await loadListings();
-
         resultBox.className = "success";
 
         if (editToken) {
@@ -732,18 +682,30 @@
 
           resultBox.innerHTML =
             `Müügikoht on avaldatud.<br><br>` +
-            `Salvesta see privaatne muutmislink:<br>` +
+            `Salvesta oma privaatne muutmislink:<br>` +
             `<a href="${escapeHTML(editUrl)}">${escapeHTML(editUrl)}</a>`;
         }
       } catch (error) {
         resultBox.className = "error";
         resultBox.textContent = error.message;
       } finally {
-        button.disabled = false;
+        submitButton.disabled = false;
       }
     });
 
-    fillBanners();
+    document.querySelectorAll(".banner-track").forEach(track => {
+      const text = track.dataset.text;
+      track.innerHTML = "";
+
+      while (track.scrollWidth < window.innerWidth * 2) {
+        const item = document.createElement("span");
+        item.textContent = text;
+        track.appendChild(item);
+      }
+
+      track.innerHTML += track.innerHTML;
+    });
+
     loadListings();
 
     const token = new URLSearchParams(location.search).get("muuda");
