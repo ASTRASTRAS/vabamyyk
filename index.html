@@ -72,6 +72,11 @@
       background: #286f26;
     }
 
+    button:disabled {
+      background: #999;
+      cursor: wait;
+    }
+
     .secondary-button {
       background: #1565c0;
     }
@@ -153,8 +158,8 @@
       align-items: center;
       justify-content: center;
       padding: 16px;
-      background: rgba(0, 0, 0, .55);
       box-sizing: border-box;
+      background: rgba(0, 0, 0, .55);
     }
 
     #listing-modal.visible {
@@ -179,6 +184,35 @@
     #listing-form textarea {
       min-height: 100px;
       resize: vertical;
+    }
+
+    .field-label {
+      display: block;
+      margin: 4px 0 5px;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .declaration {
+      margin: 14px 0 8px;
+      padding: 10px;
+      background: #f2f2f2;
+      border-radius: 7px;
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .radio-line {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 8px;
+      font-size: 16px;
+    }
+
+    #listing-form input[type="radio"] {
+      width: auto;
+      margin: 0;
     }
 
     #form-result {
@@ -257,16 +291,27 @@
       <h2 id="form-title">Lisa müügikoht</h2>
 
       <form id="listing-form">
-        <input id="form-name" required placeholder="Nimi">
+        <label class="field-label" for="form-name">Nimi</label>
+        <input id="form-name" required placeholder="Näiteks: Mari hoovimüük">
 
-        <input id="form-address" required placeholder="Aadress, näiteks Pikk 10, Tallinn">
+        <label class="field-label" for="form-address">Aadress</label>
+        <input id="form-address" required placeholder="Näiteks: Vanemuise 51 või Pikk 6, 50410">
 
-        <input id="form-date" type="date" required>
+        <label class="field-label" for="form-city">Linn või vald</label>
+        <input id="form-city" required placeholder="Näiteks: Tartu">
 
-        <input id="form-time" type="time" required>
+        <label class="field-label" for="form-start-date">Alguskuupäev</label>
+        <input id="form-start-date" type="date" required>
 
-        <select id="form-category">
-          <option value="">Kategooria (soovi korral)</option>
+        <label class="field-label" for="form-end-date">Lõppkuupäev</label>
+        <input id="form-end-date" type="date" required>
+
+        <label class="field-label" for="form-time-range">Kellaaegade vahemik</label>
+        <input id="form-time-range" required placeholder="Näiteks: E-R 10-17 või 10:00-17:00">
+
+        <label class="field-label" for="form-category">Kategooria</label>
+        <select id="form-category" required>
+          <option value="">Vali kategooria</option>
           <option value="Hooaja toit">Hooaja toit</option>
           <option value="Kodukohvik">Kodukohvik</option>
           <option value="Käsitöö">Käsitöö</option>
@@ -280,11 +325,29 @@
           <option value="Tasuta">Tasuta</option>
         </select>
 
-        <textarea id="form-description" required placeholder="Kirjeldus"></textarea>
+        <label class="field-label" for="form-description">Kirjeldus</label>
+        <textarea id="form-description" required placeholder="Mida müüd või pakud?"></textarea>
 
-        <input id="form-phone" required placeholder="Telefon või e-post">
+        <label class="field-label" for="form-phone">Telefon või e-post</label>
+        <input id="form-phone" required placeholder="Näiteks: 5555 5555 või nimi@email.ee">
 
-        <input id="form-website" type="url" placeholder="Veebiaadress (soovi korral)">
+        <label class="field-label" for="form-website">Veebiaadress</label>
+        <input id="form-website" type="url" placeholder="Soovi korral">
+
+        <div class="declaration">
+          Olen vähemalt 18-aastane. Olen eraisik või üksikisikust ettevõtja.
+          Mul on õigus müüa oma asju. Minu tegevus ei ole illegaalne.
+        </div>
+
+        <label class="radio-line">
+          <input type="radio" name="confirmation" value="yes" required>
+          Jah
+        </label>
+
+        <label class="radio-line">
+          <input type="radio" name="confirmation" value="no">
+          Ei
+        </label>
 
         <button id="submit-button" type="submit">Avalda</button>
         <button type="button" class="secondary-button" onclick="closeForm()">Sulge</button>
@@ -376,14 +439,7 @@
     }
 
     function getCategories(row) {
-      return getValue(row, [
-        "Kaubatüüp",
-        "kaubatüüp",
-        "Kauba tüüp",
-        "kauba tüüp",
-        "Kategooria",
-        "kategooria"
-      ])
+      return getValue(row, ["Kaubatüüp", "kaubatüüp"])
         .split(/[;,]/)
         .map(category => normalize(category))
         .filter(Boolean);
@@ -399,10 +455,7 @@
     }
 
     function createWebLink(row) {
-      const webText = getValue(row, [
-        "Veeb", "veeb", "Veebiaadress", "veebiaadress",
-        "URL", "url", "Link", "link"
-      ]);
+      const webText = getValue(row, ["Veeb", "veeb"]);
 
       if (!webText) return "Veeb puudub";
 
@@ -419,6 +472,17 @@
       }
     }
 
+    function dateText(row) {
+      const start = getValue(row, ["Kuupäev algus"]);
+      const end = getValue(row, ["Kuupäev lõpp"]);
+
+      if (start && end) {
+        return start === end ? start : `${start} – ${end}`;
+      }
+
+      return getValue(row, ["Kuupäev"]);
+    }
+
     async function loadListings() {
       try {
         const response = await fetch(`${API_URL}?action=list`);
@@ -433,7 +497,7 @@
 
         document.getElementById("status").textContent =
           `Laaditud kuulutusi: ${allData.length}`;
-      } catch (error) {
+      } catch {
         document.getElementById("status").textContent =
           "Andmete laadimine ebaõnnestus.";
       }
@@ -443,8 +507,8 @@
       markers.clearLayers();
 
       data.forEach(row => {
-        const lat = parseFloat(getValue(row, ["Latitude", "latitude", "Laiuskraad"]));
-        const lng = parseFloat(getValue(row, ["Longitude", "longitude", "Pikkuskraad"]));
+        const lat = parseFloat(getValue(row, ["Latitude", "latitude"]));
+        const lng = parseFloat(getValue(row, ["Longitude", "longitude"]));
 
         if (isNaN(lat) || isNaN(lng)) return;
 
@@ -454,11 +518,11 @@
           <b>${escapeHTML(getValue(row, ["Nimi", "nimi"]))}</b><br>
           ${escapeHTML(getValue(row, ["Aadress", "aadress"]))}<br>
           🏙 ${escapeHTML(getValue(row, ["Linn", "linn"]))}<br>
-          ${escapeHTML(getValue(row, ["Mobiilinumber/E-post", "mobiilinumber/e-post"]))}<br>
-          ${escapeHTML(getValue(row, ["Kuupäev", "kuupäev"]))}<br>
-          🕒 ${escapeHTML(getValue(row, ["Kellaaeg", "kellaaeg"]))}<br>
-          🏷 ${escapeHTML(getValue(row, ["Kaubatüüp", "kaubatüüp"]))}<br>
-          ${escapeHTML(getValue(row, ["Kaup", "kaup"]))}<br>
+          ${escapeHTML(getValue(row, ["Mobiilinumber/E-post"]))}<br>
+          📅 ${escapeHTML(dateText(row))}<br>
+          🕒 ${escapeHTML(getValue(row, ["Kellaaegade vahemik", "Kellaaeg"]))}<br>
+          🏷 ${escapeHTML(getValue(row, ["Kaubatüüp"]))}<br>
+          ${escapeHTML(getValue(row, ["Kaup"]))}<br>
           🔗 ${createWebLink(row)}
         `);
 
@@ -472,8 +536,8 @@
 
     function zoomToResults(data) {
       const points = data.map(row => {
-        const lat = parseFloat(getValue(row, ["Latitude", "latitude", "Laiuskraad"]));
-        const lng = parseFloat(getValue(row, ["Longitude", "longitude", "Pikkuskraad"]));
+        const lat = parseFloat(getValue(row, ["Latitude", "latitude"]));
+        const lng = parseFloat(getValue(row, ["Longitude", "longitude"]));
 
         return isNaN(lat) || isNaN(lng) ? null : [lat, lng];
       }).filter(Boolean);
@@ -522,12 +586,40 @@
         `Leitud kuulutusi: ${filtered.length}`;
     }
 
+    function formatDateForInput(date) {
+      return date.toISOString().slice(0, 10);
+    }
+
+    function setDateLimits() {
+      const tomorrow = new Date();
+      tomorrow.setHours(0, 0, 0, 0);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+
+      const maximum = new Date(tomorrow);
+      maximum.setMonth(maximum.getMonth() + 2);
+
+      const minimumText = formatDateForInput(tomorrow);
+      const maximumText = formatDateForInput(maximum);
+
+      const start = document.getElementById("form-start-date");
+      const end = document.getElementById("form-end-date");
+
+      start.min = minimumText;
+      start.max = maximumText;
+      end.min = start.value || minimumText;
+      end.max = maximumText;
+
+      if (!start.value) start.value = minimumText;
+      if (!end.value) end.value = minimumText;
+    }
+
     function openCreateForm() {
       editToken = "";
       document.getElementById("form-title").textContent = "Lisa müügikoht";
       document.getElementById("submit-button").textContent = "Avalda";
       document.getElementById("listing-form").reset();
       document.getElementById("form-result").innerHTML = "";
+      setDateLimits();
       document.getElementById("listing-modal").classList.add("visible");
     }
 
@@ -559,28 +651,38 @@
 
         const row = result.data;
 
-        setFormValue("form-name", getValue(row, ["Nimi", "nimi"]));
-        setFormValue("form-address", getValue(row, ["Aadress", "aadress"]));
-        setFormValue("form-date", getValue(row, ["Kuupäev", "kuupäev"]));
-        setFormValue("form-time", getValue(row, ["Kellaaeg", "kellaaeg"]));
-        setFormValue("form-category", getValue(row, ["Kaubatüüp", "kaubatüüp"]));
-        setFormValue("form-description", getValue(row, ["Kaup", "kaup"]));
-        setFormValue("form-phone", getValue(row, [
-          "Mobiilinumber/E-post",
-          "mobiilinumber/e-post"
-        ]));
-        setFormValue("form-website", getValue(row, ["Veeb", "veeb"]));
+        setFormValue("form-name", getValue(row, ["Nimi"]));
+        setFormValue("form-address", getValue(row, ["Aadress"]));
+        setFormValue("form-city", getValue(row, ["Linn"]));
+        setFormValue("form-start-date", getValue(row, ["Kuupäev algus"]));
+        setFormValue("form-end-date", getValue(row, ["Kuupäev lõpp"]));
+        setFormValue("form-time-range", getValue(row, ["Kellaaegade vahemik", "Kellaaeg"]));
+        setFormValue("form-category", getValue(row, ["Kaubatüüp"]));
+        setFormValue("form-description", getValue(row, ["Kaup"]));
+        setFormValue("form-phone", getValue(row, ["Mobiilinumber/E-post"]));
+        setFormValue("form-website", getValue(row, ["Veeb"]));
+
+        document.querySelector('input[name="confirmation"][value="yes"]').checked = true;
+        setDateLimits();
       } catch (error) {
         document.getElementById("form-result").className = "error";
         document.getElementById("form-result").textContent = error.message;
       }
     }
 
+    document.getElementById("form-start-date").addEventListener("change", () => {
+      document.getElementById("form-end-date").min =
+        document.getElementById("form-start-date").value;
+    });
+
     document.getElementById("listing-form").addEventListener("submit", async event => {
       event.preventDefault();
 
       const resultBox = document.getElementById("form-result");
       const button = document.getElementById("submit-button");
+      const confirmation = document.querySelector(
+        'input[name="confirmation"]:checked'
+      );
 
       resultBox.className = "";
       resultBox.textContent = "Salvestan…";
@@ -591,12 +693,15 @@
         token: editToken,
         name: document.getElementById("form-name").value.trim(),
         address: document.getElementById("form-address").value.trim(),
-        date: document.getElementById("form-date").value,
-        time: document.getElementById("form-time").value,
+        city: document.getElementById("form-city").value.trim(),
+        startDate: document.getElementById("form-start-date").value,
+        endDate: document.getElementById("form-end-date").value,
+        timeRange: document.getElementById("form-time-range").value.trim(),
         category: document.getElementById("form-category").value,
         description: document.getElementById("form-description").value.trim(),
         phone: document.getElementById("form-phone").value.trim(),
-        website: document.getElementById("form-website").value.trim()
+        website: document.getElementById("form-website").value.trim(),
+        confirmation: confirmation ? confirmation.value : ""
       };
 
       try {
