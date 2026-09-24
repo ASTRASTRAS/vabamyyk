@@ -18,10 +18,7 @@
       font-family: Arial, sans-serif;
     }
 
-    body {
-      position: fixed;
-      inset: 0;
-    }
+    body { position: fixed; inset: 0; }
 
     #map {
       position: fixed;
@@ -62,9 +59,13 @@
       font-weight: bold;
     }
 
-    .secondary-button {
-      background: #1565c0;
+    button:disabled {
+      cursor: wait;
+      opacity: .65;
     }
+
+    .secondary-button { background: #1565c0; }
+    .location-button { background: #d66c00; }
 
     #status {
       color: #555;
@@ -105,13 +106,8 @@
       padding-right: 100px;
     }
 
-    .banner.second .banner-track {
-      animation-duration: 18s;
-    }
-
-    .banner.third .banner-track {
-      animation-duration: 25s;
-    }
+    .banner.second .banner-track { animation-duration: 18s; }
+    .banner.third .banner-track { animation-duration: 25s; }
 
     #copyright {
       position: fixed;
@@ -139,9 +135,7 @@
       background: rgba(0, 0, 0, .55);
     }
 
-    #listing-modal.visible {
-      display: flex;
-    }
+    #listing-modal.visible { display: flex; }
 
     .modal-box {
       box-sizing: border-box;
@@ -159,6 +153,29 @@
       margin-bottom: 5px;
       font-weight: bold;
       font-size: 14px;
+    }
+
+    #picker-map {
+      width: 100%;
+      height: 260px;
+      margin: 5px 0 8px;
+      border: 2px solid #398b36;
+      border-radius: 8px;
+    }
+
+    #location-status {
+      min-height: 20px;
+      margin: 0 0 10px;
+      color: #555;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .location-help {
+      margin: 0 0 8px;
+      color: #444;
+      font-size: 14px;
+      line-height: 1.4;
     }
 
     .declaration {
@@ -188,15 +205,8 @@
       line-height: 1.45;
     }
 
-    .success {
-      background: #e4f7e4;
-      color: #155d15;
-    }
-
-    .error {
-      background: #ffe5e5;
-      color: #9d1515;
-    }
+    .success { background: #e4f7e4; color: #155d15; }
+    .error { background: #ffe5e5; color: #9d1515; }
 
     @keyframes move-banner {
       from { transform: translateX(0); }
@@ -217,6 +227,8 @@
         height: 38px;
         font-size: 15px;
       }
+
+      #picker-map { height: 220px; }
     }
   </style>
 </head>
@@ -242,7 +254,6 @@
 
     <button type="button" onclick="applyFilters()">Rakenda</button>
     <button type="button" class="secondary-button" onclick="openCreateForm()">Lisa müügikoht</button>
-
     <div id="status">Laadin andmeid…</div>
   </div>
 
@@ -261,6 +272,17 @@
 
         <label class="field-label">Linn või asula</label>
         <input id="form-city" required placeholder="Näiteks: Tartu">
+
+        <button type="button" class="location-button" onclick="findAddressOnPickerMap()">
+          Leia aadress kaardilt
+        </button>
+
+        <label class="field-label">Müügikoha täpne asukoht</label>
+        <p class="location-help">
+          Lohista punane nööpnõel õigesse kohta. Võid ka kaardil vajutada soovitud kohale.
+        </p>
+        <div id="picker-map"></div>
+        <div id="location-status">Vali kaardilt müügikoha täpne asukoht.</div>
 
         <label class="field-label">Alguskuupäev</label>
         <input id="form-start-date" required inputmode="numeric"
@@ -334,8 +356,6 @@
     <div class="banner second">
       <a class="banner-track"
          href=""
-         target="_blank"
-         rel="noopener noreferrer"
          data-text="Siin saad reklaamida oma ettevõtet!">
       </a>
     </div>
@@ -359,7 +379,10 @@
     const API_URL =
       "https://script.google.com/macros/s/AKfycbwfRrG_WXEgPD_HMJPh5LlitsC9QtWarrey3Ei8-zUJGDgfbQLdE3W4MawtNPC7pgnZ/exec";
 
-    const map = L.map("map").setView([58.7, 25.0], 7);
+    const estoniaCenter = [58.7, 25.0];
+    const estoniaZoom = 7;
+
+    const map = L.map("map").setView(estoniaCenter, estoniaZoom);
 
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: "© OpenStreetMap"
@@ -370,6 +393,9 @@
 
     let allData = [];
     let editToken = "";
+    let pickerMap;
+    let pickerMarker;
+    let selectedLocation = null;
 
     function getValue(row, names) {
       for (const name of names) {
@@ -401,7 +427,6 @@
 
     function parseDate(text) {
       const match = String(text).trim().match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-
       if (!match) return null;
 
       const date = new Date(
@@ -424,20 +449,13 @@
       const start = parseDate(document.getElementById("form-start-date").value);
       const end = parseDate(document.getElementById("form-end-date").value);
 
-      if (!start || !end) {
-        return "Kuupäev peab olema kujul 12/07/2026.";
-      }
+      if (!start || !end) return "Kuupäev peab olema kujul 12/07/2026.";
 
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      if (start < today) {
-        return "Alguskuupäev ei tohi olla minevikus.";
-      }
-
-      if (end < start) {
-        return "Lõppkuupäev ei tohi olla alguskuupäevast varasem.";
-      }
+      if (start < today) return "Alguskuupäev ei tohi olla minevikus.";
+      if (end < start) return "Lõppkuupäev ei tohi olla alguskuupäevast varasem.";
 
       const maximum = new Date(start);
       maximum.setMonth(maximum.getMonth() + 2);
@@ -458,12 +476,10 @@
 
     function createWebLink(row) {
       const web = getValue(row, ["Veeb"]);
-
       if (!web) return "Veeb puudub";
 
       try {
         const url = new URL(/^https?:\/\//i.test(web) ? web : `https://${web}`);
-
         return `<a href="${escapeHTML(url.href)}" target="_blank" rel="noopener noreferrer">Ava veebileht</a>`;
       } catch {
         return "Vigane veebiaadress";
@@ -487,7 +503,6 @@
 
         allData = result.data;
         renderMarkers(allData);
-
         document.getElementById("status").textContent =
           `Laaditud kuulutusi: ${allData.length}`;
       } catch {
@@ -558,11 +573,109 @@
       } else if (points.length > 1) {
         map.fitBounds(points, { padding: [40, 140], maxZoom: 14 });
       } else if (!search && filter === "all") {
-        map.setView([58.7, 25.0], 7);
+        map.setView(estoniaCenter, estoniaZoom);
       }
 
       document.getElementById("status").textContent =
         `Leitud kuulutusi: ${filtered.length}`;
+    }
+
+    function updateLocationStatus() {
+      const status = document.getElementById("location-status");
+
+      if (!selectedLocation) {
+        status.textContent = "Vali kaardilt müügikoha täpne asukoht.";
+        return;
+      }
+
+      status.textContent =
+        `Valitud koht: ${selectedLocation.lat.toFixed(6)}, ${selectedLocation.lng.toFixed(6)}`;
+    }
+
+    function setPickerLocation(lat, lng, zoom = 16, selected = true) {
+      const location = L.latLng(Number(lat), Number(lng));
+
+      pickerMarker.setLatLng(location);
+      pickerMap.setView(location, zoom);
+
+      selectedLocation = selected
+        ? { lat: location.lat, lng: location.lng }
+        : null;
+
+      updateLocationStatus();
+    }
+
+    function initializePickerMap(lat = 58.7, lng = 25.0, zoom = 7, selected = false) {
+      if (!pickerMap) {
+        pickerMap = L.map("picker-map", {
+          zoomControl: true
+        });
+
+        L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          attribution: "© OpenStreetMap"
+        }).addTo(pickerMap);
+
+        pickerMarker = L.marker([lat, lng], {
+          draggable: true
+        }).addTo(pickerMap);
+
+        pickerMarker.on("dragend", event => {
+          const position = event.target.getLatLng();
+          selectedLocation = { lat: position.lat, lng: position.lng };
+          updateLocationStatus();
+        });
+
+        pickerMap.on("click", event => {
+          pickerMarker.setLatLng(event.latlng);
+          selectedLocation = { lat: event.latlng.lat, lng: event.latlng.lng };
+          updateLocationStatus();
+        });
+      }
+
+      pickerMap.setView([lat, lng], zoom);
+      pickerMarker.setLatLng([lat, lng]);
+
+      selectedLocation = selected ? { lat: Number(lat), lng: Number(lng) } : null;
+      updateLocationStatus();
+
+      setTimeout(() => pickerMap.invalidateSize(), 150);
+    }
+
+    async function findAddressOnPickerMap() {
+      const address = document.getElementById("form-address").value.trim();
+      const city = document.getElementById("form-city").value.trim();
+      const resultBox = document.getElementById("form-result");
+
+      if (!address || !city) {
+        resultBox.className = "error";
+        resultBox.textContent = "Kirjuta enne aadress ja linn või asula.";
+        return;
+      }
+
+      resultBox.className = "";
+      resultBox.textContent = "Otsin aadressi kaardilt…";
+
+      try {
+        const response = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({
+            action: "previewGeocode",
+            address,
+            city
+          })
+        });
+
+        const result = await response.json();
+        if (!result.success) throw new Error(result.error);
+
+        setPickerLocation(result.latitude, result.longitude, 17, true);
+        resultBox.textContent =
+          "Aadress leiti. Kontrolli asukoht üle ja lohista punane nööpnõel vajadusel õigesse kohta.";
+      } catch (error) {
+        resultBox.className = "error";
+        resultBox.textContent = error.message;
+      }
     }
 
     function openCreateForm() {
@@ -577,6 +690,7 @@
       document.getElementById("form-end-date").value = formatDate(today);
 
       document.getElementById("listing-modal").classList.add("visible");
+      initializePickerMap(58.7, 25.0, 7, false);
     }
 
     function closeForm() {
@@ -592,6 +706,7 @@
       document.getElementById("form-title").textContent = "Muuda müügikohta";
       document.getElementById("submit-button").textContent = "Salvesta muudatused";
       document.getElementById("listing-modal").classList.add("visible");
+      document.getElementById("form-result").innerHTML = "";
 
       try {
         const response = await fetch(
@@ -599,7 +714,6 @@
         );
 
         const result = await response.json();
-
         if (!result.success) throw new Error(result.error);
 
         const row = result.data;
@@ -616,6 +730,16 @@
         setFormValue("form-website", getValue(row, ["Veeb"]));
 
         document.querySelector('input[name="confirmation"][value="yes"]').checked = true;
+
+        const lat = parseFloat(getValue(row, ["Latitude"]));
+        const lng = parseFloat(getValue(row, ["Longitude"]));
+
+        initializePickerMap(
+          isNaN(lat) ? 58.7 : lat,
+          isNaN(lng) ? 25.0 : lng,
+          isNaN(lat) || isNaN(lng) ? 7 : 17,
+          !isNaN(lat) && !isNaN(lng)
+        );
       } catch (error) {
         document.getElementById("form-result").className = "error";
         document.getElementById("form-result").textContent = error.message;
@@ -632,6 +756,13 @@
       if (dateError) {
         resultBox.className = "error";
         resultBox.textContent = dateError;
+        return;
+      }
+
+      if (!selectedLocation) {
+        resultBox.className = "error";
+        resultBox.textContent =
+          "Vali enne kaardilt müügikoha täpne asukoht või kasuta nuppu „Leia aadress kaardilt”.";
         return;
       }
 
@@ -652,6 +783,8 @@
         description: document.getElementById("form-description").value.trim(),
         phone: document.getElementById("form-phone").value.trim(),
         website: document.getElementById("form-website").value.trim(),
+        latitude: selectedLocation.lat,
+        longitude: selectedLocation.lng,
         confirmation: confirmation ? confirmation.value : ""
       };
 
@@ -667,7 +800,6 @@
         });
 
         const result = await response.json();
-
         if (!result.success) throw new Error(result.error);
 
         await loadListings();
@@ -709,10 +841,7 @@
     loadListings();
 
     const token = new URLSearchParams(location.search).get("muuda");
-
-    if (token) {
-      openEditForm(token);
-    }
+    if (token) openEditForm(token);
   </script>
 </body>
 </html>
