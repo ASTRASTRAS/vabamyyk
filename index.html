@@ -279,7 +279,7 @@
 
         <label class="field-label">Müügikoha täpne asukoht</label>
         <p class="location-help">
-          Lohista punane nööpnõel õigesse kohta. Võid ka kaardil vajutada soovitud kohale.
+          Lohista sinine nööpnõel õigesse kohta. Võid ka kaardil vajutada soovitud kohale.
         </p>
         <div id="picker-map"></div>
         <div id="location-status">Vali kaardilt müügikoha täpne asukoht.</div>
@@ -671,7 +671,7 @@
 
         setPickerLocation(result.latitude, result.longitude, 17, true);
         resultBox.textContent =
-          "Aadress leiti. Kontrolli asukoht üle ja lohista punane nööpnõel vajadusel õigesse kohta.";
+          "Aadress leiti. Kontrolli asukoht üle ja lohista sinine nööpnõel vajadusel õigesse kohta.";
       } catch (error) {
         resultBox.className = "error";
         resultBox.textContent = error.message;
