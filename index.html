@@ -397,7 +397,11 @@
       attribution: "© OpenStreetMap"
     }).addTo(map);
 
-    const markers = L.markerClusterGroup();
+    const markers = L.markerClusterGroup({
+  spiderfyOnMaxZoom: true,
+  showCoverageOnHover: false,
+  zoomToBoundsOnClick: true
+});
     map.addLayer(markers);
 
     let allData = [];
@@ -544,8 +548,12 @@
         `);
 
         marker.on("click", () => {
-          map.flyTo([lat, lng], 17, { duration: 0.7 });
-        });
+  map.flyTo([lat, lng], 17, { duration: 0.7 });
+
+  map.once("moveend", () => {
+    marker.openPopup();
+  });
+});
 
         markers.addLayer(marker);
       });
