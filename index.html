@@ -548,7 +548,7 @@
         `);
 
         marker.on("click", () => {
-  map.flyTo([lat, lng], 17, { duration: 3.7 });
+  map.flyTo([lat, lng], 17, { duration: 5.0 });
 
   map.once("moveend", () => {
     marker.openPopup();
