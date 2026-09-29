@@ -524,40 +524,55 @@
       }
     }
 
-    function renderMarkers(data) {
-      markers.clearLayers();
+ function renderMarkers(data) {
+  markers.clearLayers();
 
-      data.forEach(row => {
-        const lat = parseFloat(getValue(row, ["Latitude"]));
-        const lng = parseFloat(getValue(row, ["Longitude"]));
+  data.forEach(row => {
+    const lat = parseFloat(getValue(row, ["Latitude"]));
+    const lng = parseFloat(getValue(row, ["Longitude"]));
 
-        if (isNaN(lat) || isNaN(lng)) return;
+    if (isNaN(lat) || isNaN(lng)) return;
 
-        const marker = L.marker([lat, lng]);
+    const marker = L.marker([lat, lng]);
 
-        marker.bindPopup(`
-          <b>${escapeHTML(getValue(row, ["Nimi"]))}</b><br>
-          ${escapeHTML(getValue(row, ["Aadress"]))}<br>
-          🏙 ${escapeHTML(getValue(row, ["Linn"]))}<br>
-          ${escapeHTML(getValue(row, ["Mobiilinumber/E-post"]))}<br>
-          📅 ${escapeHTML(dateText(row))}<br>
-          🕒 ${escapeHTML(getValue(row, ["Kellaaegade vahemik", "Kellaaeg"]))}<br>
-          🏷 ${escapeHTML(getValue(row, ["Kaubatüüp"]))}<br>
-          ${escapeHTML(getValue(row, ["Kaup"]))}<br>
-          🔗 ${createWebLink(row)}
-        `);
+    marker.bindPopup(`
+      <b>${escapeHTML(getValue(row, ["Nimi"]))}</b><br>
+      ${escapeHTML(getValue(row, ["Aadress"]))}<br>
+      🏙 ${escapeHTML(getValue(row, ["Linn"]))}<br>
+      ${escapeHTML(getValue(row, ["Mobiilinumber/E-post"]))}<br>
+      📅 ${escapeHTML(dateText(row))}<br>
+      🕒 ${escapeHTML(getValue(row, ["Kellaaegade vahemik", "Kellaaeg"]))}<br>
+      🏷 ${escapeHTML(getValue(row, ["Kaubatüüp"]))}<br>
+      ${escapeHTML(getValue(row, ["Kaup"]))}<br>
+      🔗 ${createWebLink(row)}
+    `, {
+      autoClose: false,
+      closeOnClick: false
+    });
 
-        marker.on("click", () => {
-  map.flyTo([lat, lng], 17, { duration: 5.0 });
+    marker.on("click", event => {
+      if (event.originalEvent) {
+        L.DomEvent.stopPropagation(event.originalEvent);
+      }
 
-  map.once("moveend", () => {
-    marker.openPopup();
-  });
-});
+      /*
+        Teeb suumi esmalt ära ning avab hüpikakna alles pärast seda.
+        zoomToShowLayer aitab ka siis, kui samas kohas on mitu nööpnõela.
+      */
+      markers.zoomToShowLayer(marker, () => {
+        map.setView(marker.getLatLng(), 17, {
+          animate: false
+        });
 
-        markers.addLayer(marker);
+        setTimeout(() => {
+          marker.openPopup();
+        }, 100);
       });
-    }
+    });
+
+    markers.addLayer(marker);
+  });
+}
 
     function applyFilters() {
       const search = normalize(document.getElementById("search").value);
