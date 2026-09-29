@@ -527,11 +527,34 @@
  function renderMarkers(data) {
   markers.clearLayers();
 
+  // Loendab, mitu kuulutust on samal aadressil.
+  const addressCounts = new Map();
+
+  data.forEach(row => {
+    const addressKey =
+      normalize(getValue(row, ["Aadress"])) +
+      "|" +
+      normalize(getValue(row, ["Linn"]));
+
+    addressCounts.set(
+      addressKey,
+      (addressCounts.get(addressKey) || 0) + 1
+    );
+  });
+
   data.forEach(row => {
     const lat = parseFloat(getValue(row, ["Latitude"]));
     const lng = parseFloat(getValue(row, ["Longitude"]));
 
     if (isNaN(lat) || isNaN(lng)) return;
+
+    const addressKey =
+      normalize(getValue(row, ["Aadress"])) +
+      "|" +
+      normalize(getValue(row, ["Linn"]));
+
+    const hasSeveralAtSameAddress =
+      addressCounts.get(addressKey) > 1;
 
     const marker = L.marker([lat, lng]);
 
@@ -556,24 +579,30 @@
       }
 
       /*
-        Teeb suumi esmalt ära ning avab hüpikakna alles pärast seda.
-        zoomToShowLayer aitab ka siis, kui samas kohas on mitu nööpnõela.
+        Kui samal aadressil on mitu kuulutust,
+        ei muudeta enam kaardi suumi.
+        Hüpikaken lihtsalt avaneb ja jääb lahti.
       */
-      markers.zoomToShowLayer(marker, () => {
-        map.setView(marker.getLatLng(), 17, {
-          animate: false
-        });
+      if (hasSeveralAtSameAddress) {
+        marker.openPopup();
+        return;
+      }
 
-        setTimeout(() => {
-          marker.openPopup();
-        }, 100);
+      /*
+        Ühe nööpnõela korral suumitakse tänava tasemele.
+      */
+      map.setView(marker.getLatLng(), 17, {
+        animate: false
       });
+
+      setTimeout(() => {
+        marker.openPopup();
+      }, 100);
     });
 
     markers.addLayer(marker);
   });
 }
-
     function applyFilters() {
       const search = normalize(document.getElementById("search").value);
       const filter = normalize(document.getElementById("filter").value);
