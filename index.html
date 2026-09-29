@@ -747,84 +747,143 @@
     }
 
     document.getElementById("listing-form").addEventListener("submit", async event => {
-      event.preventDefault();
+  event.preventDefault();
 
-      const resultBox = document.getElementById("form-result");
-      const submitButton = document.getElementById("submit-button");
-      const dateError = validateDates();
+  const resultBox = document.getElementById("form-result");
+  const submitButton = document.getElementById("submit-button");
 
-      if (dateError) {
-        resultBox.className = "error";
-        resultBox.textContent = dateError;
-        return;
-      }
+  const confirmation = document.querySelector(
+    'input[name="confirmation"]:checked'
+  );
 
-      if (!selectedLocation) {
-        resultBox.className = "error";
-        resultBox.textContent =
-          "Vali enne kaardilt müügikoha täpne asukoht või kasuta nuppu „Leia aadress kaardilt”.";
-        return;
-      }
+  if (!confirmation) {
+    resultBox.className = "error";
+    resultBox.textContent = "Vali „Jah” või „Ei”.";
+    return;
+  }
 
-      const confirmation = document.querySelector(
-        'input[name="confirmation"]:checked'
-      );
+  /*
+    Uue kuulutuse puhul „Ei” ei avalda midagi.
+    Olemasoleva kuulutuse muutmisel „Ei” kustutab kuulutuse.
+  */
+  if (confirmation.value === "no") {
+    if (!editToken) {
+      resultBox.className = "error";
+      resultBox.textContent = "Teie kuulutust ei avaldata.";
+      return;
+    }
 
-      const data = {
-        action: editToken ? "update" : "create",
-        token: editToken,
-        name: document.getElementById("form-name").value.trim(),
-        address: document.getElementById("form-address").value.trim(),
-        city: document.getElementById("form-city").value.trim(),
-        startDate: document.getElementById("form-start-date").value.trim(),
-        endDate: document.getElementById("form-end-date").value.trim(),
-        timeRange: document.getElementById("form-time-range").value.trim(),
-        category: document.getElementById("form-category").value,
-        description: document.getElementById("form-description").value.trim(),
-        phone: document.getElementById("form-phone").value.trim(),
-        website: document.getElementById("form-website").value.trim(),
-        latitude: selectedLocation.lat,
-        longitude: selectedLocation.lng,
-        confirmation: confirmation ? confirmation.value : ""
-      };
+    const confirmed = window.confirm(
+      "Kas soovid kuulutuse lõplikult eemaldada? Seda ei saa tagasi võtta."
+    );
 
-      resultBox.className = "";
-      resultBox.textContent = "Salvestan…";
-      submitButton.disabled = true;
+    if (!confirmed) return;
 
-      try {
-        const response = await fetch(API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify(data)
-        });
+    resultBox.className = "";
+    resultBox.textContent = "Eemaldan kuulutust…";
+    submitButton.disabled = true;
 
-        const result = await response.json();
-        if (!result.success) throw new Error(result.error);
+    try {
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({
+          action: "delete",
+          token: editToken
+        })
+      });
 
-        await loadListings();
-        resultBox.className = "success";
+      const result = await response.json();
 
-        if (editToken) {
-          resultBox.textContent = "Muudatused on salvestatud.";
-        } else {
-          const editUrl =
-            `${location.origin}${location.pathname}?muuda=` +
-            encodeURIComponent(result.editToken);
+      if (!result.success) throw new Error(result.error);
 
-          resultBox.innerHTML =
-            `Müügikoht on avaldatud.<br><br>` +
-            `Salvesta oma privaatne muutmislink:<br>` +
-            `<a href="${escapeHTML(editUrl)}">${escapeHTML(editUrl)}</a>`;
-        }
-      } catch (error) {
-        resultBox.className = "error";
-        resultBox.textContent = error.message;
-      } finally {
-        submitButton.disabled = false;
-      }
+      await loadListings();
+
+      resultBox.className = "success";
+      resultBox.textContent =
+        "Kuulutus on eemaldatud ega ole enam veebisaidil nähtav.";
+
+      setTimeout(closeForm, 1800);
+    } catch (error) {
+      resultBox.className = "error";
+      resultBox.textContent = error.message;
+    } finally {
+      submitButton.disabled = false;
+    }
+
+    return;
+  }
+
+  const dateError = validateDates();
+
+  if (dateError) {
+    resultBox.className = "error";
+    resultBox.textContent = dateError;
+    return;
+  }
+
+  if (!selectedLocation) {
+    resultBox.className = "error";
+    resultBox.textContent =
+      "Vali enne kaardilt müügikoha täpne asukoht või kasuta nuppu „Leia aadress kaardilt”.";
+    return;
+  }
+
+  const data = {
+    action: editToken ? "update" : "create",
+    token: editToken,
+    name: document.getElementById("form-name").value.trim(),
+    address: document.getElementById("form-address").value.trim(),
+    city: document.getElementById("form-city").value.trim(),
+    startDate: document.getElementById("form-start-date").value.trim(),
+    endDate: document.getElementById("form-end-date").value.trim(),
+    timeRange: document.getElementById("form-time-range").value.trim(),
+    category: document.getElementById("form-category").value,
+    description: document.getElementById("form-description").value.trim(),
+    phone: document.getElementById("form-phone").value.trim(),
+    website: document.getElementById("form-website").value.trim(),
+    latitude: selectedLocation.lat,
+    longitude: selectedLocation.lng,
+    confirmation: "yes"
+  };
+
+  resultBox.className = "";
+  resultBox.textContent = "Salvestan…";
+  submitButton.disabled = true;
+
+  try {
+    const response = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(data)
     });
 
+    const result = await response.json();
+
+    if (!result.success) throw new Error(result.error);
+
+    await loadListings();
+    resultBox.className = "success";
+
+    if (editToken) {
+      resultBox.textContent = "Muudatused on salvestatud.";
+    } else {
+      const editUrl =
+        `${location.origin}${location.pathname}?muuda=` +
+        encodeURIComponent(result.editToken);
+
+      resultBox.innerHTML =
+        `Müügikoht on avaldatud.<br><br>` +
+        `Salvesta oma privaatne muutmislink:<br>` +
+        `<a href="${escapeHTML(editUrl)}">${escapeHTML(editUrl)}</a>`;
+    }
+  } catch (error) {
+    resultBox.className = "error";
+    resultBox.textContent = error.message;
+  } finally {
+    submitButton.disabled = false;
+  }
+});
     document.querySelectorAll(".banner-track").forEach(track => {
       const text = track.dataset.text;
       track.innerHTML = "";
