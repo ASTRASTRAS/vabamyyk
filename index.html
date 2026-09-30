@@ -625,7 +625,11 @@ function renderMarkers(data) {
       if (!pickerMap) {
         pickerMap = L.map("picker-map", {
           zoomControl: true
-        });
+          attributionControl: true
+});
+
+pickerMap.attributionControl.setPrefix(false);
+       
 
         L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
           attribution: "© OpenStreetMap"
