@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="et">
 <head>
-  <!-- Google tag (gtag.js) -->
+<!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-HH9416LKQN"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -511,11 +511,11 @@
     }
 
     function getCategories(row) {
-      return getValue(row, ["Kaubatüüp"])
-        .split(/[;,]/)
-        .map(normalize)
-        .filter(Boolean);
-    }
+  return getValue(row, ["Kaubatüüp"])
+    .split(/[;,]/)
+    .map(category => normalize(category))
+    .filter(Boolean);
+}
 
     function createWebLink(row) {
       const web = getValue(row, ["Veeb"]);
@@ -554,7 +554,7 @@
       }
     }
 
-function renderMarkers(data) {
+    function renderMarkers(data) {
       markers.clearLayers();
 
       data.forEach(row => {
@@ -588,6 +588,7 @@ function renderMarkers(data) {
         markers.addLayer(marker);
       });
     }
+
     function applyFilters() {
       const search = normalize(document.getElementById("search").value);
       const filter = normalize(document.getElementById("filter").value);
@@ -655,11 +656,10 @@ function renderMarkers(data) {
       if (!pickerMap) {
         pickerMap = L.map("picker-map", {
           zoomControl: true,
-          attributionControl: true
+		  attributionControl: true
         });
-
         pickerMap.attributionControl.setPrefix(false);
-       
+      
 
         L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
           attribution: "© OpenStreetMap"
@@ -750,6 +750,16 @@ function renderMarkers(data) {
     function setFormValue(id, value) {
       document.getElementById(id).value = value || "";
     }
+function setCategoryFields(value) {
+  const categories = String(value || "")
+    .split(/[;,]/)
+    .map(category => category.trim())
+    .filter(Boolean);
+
+  document.getElementById("form-category").value = categories[0] || "";
+  document.getElementById("form-category-2").value = categories[1] || "";
+  document.getElementById("form-category-3").value = categories[2] || "";
+}
 
     async function openEditForm(token) {
       editToken = token;
@@ -774,7 +784,7 @@ function renderMarkers(data) {
         setFormValue("form-start-date", getValue(row, ["Kuupäev algus"]));
         setFormValue("form-end-date", getValue(row, ["Kuupäev lõpp"]));
         setFormValue("form-time-range", getValue(row, ["Kellaaegade vahemik", "Kellaaeg"]));
-        setFormValue("form-category", getValue(row, ["Kaubatüüp"]));
+        setCategoryFields(getValue(row, ["Kaubatüüp"]));
         setFormValue("form-description", getValue(row, ["Kaup"]));
         setFormValue("form-phone", getValue(row, ["Mobiilinumber/E-post"]));
         setFormValue("form-website", getValue(row, ["Veeb"]));
@@ -796,7 +806,7 @@ function renderMarkers(data) {
       }
     }
 
-    document.getElementById("listing-form").addEventListener("submit", async event => {
+document.getElementById("listing-form").addEventListener("submit", async event => {
   event.preventDefault();
 
   const resultBox = document.getElementById("form-result");
@@ -888,7 +898,15 @@ function renderMarkers(data) {
     startDate: document.getElementById("form-start-date").value.trim(),
     endDate: document.getElementById("form-end-date").value.trim(),
     timeRange: document.getElementById("form-time-range").value.trim(),
-    category: document.getElementById("form-category").value,
+    category: [
+  document.getElementById("form-category").value,
+  document.getElementById("form-category-2").value,
+  document.getElementById("form-category-3").value
+]
+  .filter(Boolean)
+  .filter((category, index, array) => array.indexOf(category) === index)
+  .join("; "),
+	
     description: document.getElementById("form-description").value.trim(),
     phone: document.getElementById("form-phone").value.trim(),
     website: document.getElementById("form-website").value.trim(),
@@ -934,6 +952,7 @@ function renderMarkers(data) {
     submitButton.disabled = false;
   }
 });
+
     document.querySelectorAll(".banner-track").forEach(track => {
       const text = track.dataset.text;
       track.innerHTML = "";
